@@ -1,0 +1,10 @@
+maxDownloads: 3
+preferedBots: [835, 836, 1010, 696]
+preferedFormat: "1080p"
+downloadDir: "./downloads"
+boundIp: "0.0.0.0"
+irc:
+  server: "server.ip.address"
+  serverPort: 0000
+  channelName: "#channelName"
+  nick: "name" or delete line for random name

@@ -1,0 +1,14 @@
+.vscode
+*temp*
+*.mkv
+*.exe
+*.rar
+*.bat
+go-xdcc
+*.json
+*.part
+
+config/trackers/*.yaml
+config/config.yaml
+downloads/*
+*tmp*
