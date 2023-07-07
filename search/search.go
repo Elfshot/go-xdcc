@@ -162,7 +162,9 @@ func loadBots() ([]BotScheme, error) {
 	if err != nil {
 		log.Fatal("Cannot get current working directory:\n" + err.Error())
 	}
-	botPath := cwd + "\\data\\bots.json"
+
+	sep := string(os.PathSeparator)
+	botPath := fmt.Sprintf("%s%sdata%sbots.json", cwd, sep, sep)
 
 	var data jsonContent[[]BotScheme]
 
@@ -181,7 +183,7 @@ func loadBots() ([]BotScheme, error) {
 		}
 
 		// Ensure bothPath exists
-		os.MkdirAll(cwd+"\\data", 0777)
+		os.MkdirAll(cwd+sep+"data", 0777)
 
 		err = os.WriteFile(botPath, plan, 0777)
 		if err != nil {

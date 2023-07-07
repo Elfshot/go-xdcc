@@ -28,16 +28,12 @@ const bufferSize = 1024 * 1024 * 50
 
 func (p Pack) GetFileDir() string {
 	dir := config.GetConfig().DownloadDir
-	sep := "/"
+	sep := string(os.PathSeparator)
 	showDir := dir + p.ShowName + sep
 	seasonDir := showDir + "Season " + fmt.Sprint(p.Season) + sep
 
-	if _, err := os.Stat(showDir); os.IsNotExist(err) {
-		os.Mkdir(showDir, 0777)
-	}
-
 	if _, err := os.Stat(seasonDir); os.IsNotExist(err) {
-		os.Mkdir(seasonDir, 0777)
+		os.MkdirAll(seasonDir, 0777)
 	}
 
 	return seasonDir + p.ModFileName
@@ -600,6 +596,24 @@ func QueueLoop() {
 
 		tracker := monitor.Add(job.packData.FileName, job.packData.Size)
 		tracker.Total = int64(job.packData.Size - job.transferData.startBytes)
+
+		progress := make(chan bool)
+
+		go func() {
+			for {
+				select {
+				case <-progress:
+					continue
+				case <-time.After(5 * time.Minute):
+					if ircClient != nil && ircClient.Connected() {
+						log.Debug("No progress in 5 minutes, closing irc connection")
+						ircClient.Close()
+						ircClient = nil
+					}
+				}
+			}
+		}()
+
 		go func() {
 			for {
 				select {
