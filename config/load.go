@@ -12,20 +12,23 @@ var gConfig *Config
 
 // Create a config struct to hold the config data
 type Config struct {
-	PreferedBots   []int     `yaml:"preferedBots"`
-	MaxDownloads   int       `yaml:"maxDownloads"`
-	PreferedFormat string    `yaml:"preferedFormat"`
-	DownloadDir    string    `yaml:"downloadDir"`
-	BoundIp        string    `yaml:"boundIp"`
-	IRC            ircConfig `yaml:"irc"`
-	Trackers       []Tracker
+	PreferedBots     []int     `yaml:"preferedBots"`
+	MaxDownloads     int       `yaml:"maxDownloads"`
+	PreferedFormat   string    `yaml:"preferedFormat"`
+	DownloadDir      string    `yaml:"downloadDir"`
+	BoundIp          string    `yaml:"boundIp"`
+	DownloadInterval int       `yaml:"downloadInterval"`
+	IRC              ircConfig `yaml:"irc"`
+	Trackers         []Tracker
 }
 
 type ircConfig struct {
-	Server      string `yaml:"server"`
-	ServerPort  int    `yaml:"serverPort"`
-	ChannelName string `yaml:"channelName"`
-	NickName    string `yaml:"nick"`
+	Server              string `yaml:"server"`
+	ServerPort          int    `yaml:"serverPort"`
+	ChannelName         string `yaml:"channelName"`
+	NickName            string `yaml:"nick"`
+	CloseConnectionMins int    `yaml:"closeConnectionMins"`
+	MaxWaitIrcCycles    int    `yaml:"maxWaitIrcCycles"`
 }
 
 type Tracker struct {

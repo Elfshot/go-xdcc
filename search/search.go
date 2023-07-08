@@ -2,6 +2,7 @@ package search
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/url"
 	"os"
@@ -57,7 +58,7 @@ func getPreferedBots() []BotScheme {
 		return preferedBots
 	}
 	preferedBots = []BotScheme{}
-	botIds := []int{835, 836, 1010, 696}
+	botIds := config.GetConfig().PreferedBots
 	bots, err := loadBots()
 	if err != nil {
 		log.Error("Cannot load bots:\n" + err.Error())
@@ -73,14 +74,14 @@ func getPreferedBots() []BotScheme {
 	return preferedBots
 }
 
-func GetBotName(id int) string {
+func GetBotName(id int) (string, error) {
 	bots := getPreferedBots()
 	for _, bot := range bots {
 		if bot.Id == id {
-			return bot.Name
+			return bot.Name, nil
 		}
 	}
-	return ""
+	return "", errors.New("Bot not found for ID: " + fmt.Sprint(id))
 }
 
 func formatString(s string) string {
@@ -111,7 +112,11 @@ func GetSeriesPacks(series string) ([]PackScheme, error) {
 				continue
 			}
 
-			if (pack.BotId == bot.Id) && strings.EqualFold(quals[2]+"p", config.GetConfig().PreferedFormat) { // prefered bot && quality
+			if pack.BotId != bot.Id { // prefered bot
+				continue
+			}
+
+			if strings.EqualFold(quals[2]+"p", config.GetConfig().PreferedFormat) { // prefered quality
 				names := nameRegexp.FindStringSubmatch(pack.Name)
 				if len(names) <= 0 {
 					continue

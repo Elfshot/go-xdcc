@@ -15,8 +15,9 @@ import (
 )
 
 func InitTrackers(pw *progress.Monitor) {
+	cfg := config.GetConfig()
 	cron := gocron.NewScheduler(time.Local)
-	cron.Every(30).Minutes().Do(runTrackers, pw)
+	cron.Every(cfg.DownloadInterval).Minutes().Do(runTrackers, pw)
 	cron.StartBlocking()
 }
 
@@ -45,8 +46,15 @@ func runTrackers(pw *progress.Monitor) {
 				newEp = pack.EpisodeNumber
 			}
 
+			botN, err := search.GetBotName(pack.BotId)
+
+			if err != nil {
+				log.Error(err)
+				continue
+			}
+
 			var sPack *irc.Pack = &irc.Pack{
-				BotNick:     search.GetBotName(pack.BotId),
+				BotNick:     botN,
 				FileName:    pack.Name,
 				ModFileName: fmt.Sprintf("S%dE%d.mkv", tracker.Season, newEp),
 				Size:        0,

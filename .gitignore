@@ -9,6 +9,7 @@ go-xdcc
 *.part
 
 config/trackers/*.yaml
+config/trackers/archive/*.yaml
 config/config.yaml
 downloads/*
 *tmp*

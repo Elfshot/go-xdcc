@@ -583,7 +583,10 @@ func (c *counterT) wait() {
 }
 
 func QueueLoop() {
-	max_dls := config.GetConfig().MaxDownloads
+	config := config.GetConfig()
+	max_dls := config.MaxDownloads
+	closeConnMins := time.Duration(config.IRC.CloseConnectionMins)
+
 	counter := counterT{count: 0, limit: max_dls}
 	jobs := make(chan *session)
 
@@ -604,7 +607,7 @@ func QueueLoop() {
 				select {
 				case <-progress:
 					continue
-				case <-time.After(5 * time.Minute):
+				case <-time.After(closeConnMins * time.Minute):
 					if ircClient != nil && ircClient.Connected() {
 						log.Debug("No progress in 5 minutes, closing irc connection")
 						ircClient.Close()
@@ -687,14 +690,15 @@ func waitIrcReady() {
 		}
 	}()
 	fails := 0
+	maxWaits := config.GetConfig().IRC.MaxWaitIrcCycles
 	for {
 		select {
 		case <-ready:
 			return
 		case <-time.After(10 * time.Second):
 			log.Error("IRC Client not ready after 10 seconds")
-			if fails += 1; fails > 25 {
-				log.Fatal("IRC Client not ready after 25 waits")
+			if fails += 1; fails > maxWaits {
+				log.Fatalf("IRC Client not ready after %d waits", maxWaits)
 			}
 		}
 	}
