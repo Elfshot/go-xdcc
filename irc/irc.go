@@ -285,7 +285,6 @@ func voidTcpConn(ip net.IP, port int) {
 }
 
 var ircClient *irc.Conn = nil
-var quit chan bool = nil
 
 func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) {
 	if ircClient != nil && ircClient.Connected() {
@@ -299,7 +298,7 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 	}
 	ircClient, quit = createIrcClient()
 
-	registerHandlers(ircClient, jobs, ready)
+	registerHandlers(ircClient, jobs, ready, quit)
 
 	if err := ircClient.Connect(); err != nil {
 		quit <- false
@@ -313,8 +312,10 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 		if retries >= 3 {
 			log.Fatalf("Connection error: %s\n", "maximum number of retries reached for IRC channel connection")
 		}
-		ircClient.Close()
-		ircClient = nil
+		if ircClient != nil {
+			ircClient.Close()
+			ircClient = nil
+		}
 		quit = nil
 		return getIrc(jobs, retries+1)
 	}
@@ -429,7 +430,7 @@ func createIrcClient() (*irc.Conn, chan bool) {
 	return c, quit
 }
 
-func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool) {
+func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit chan bool) {
 	c.HandleFunc(irc.CONNECTED,
 		func(conn *irc.Conn, line *irc.Line) {
 			log.Debug(line.Text())
@@ -590,6 +591,29 @@ func QueueLoop() {
 	counter := counterT{count: 0, limit: max_dls}
 	jobs := make(chan *session)
 
+	progress := make(chan bool)
+
+	go func() {
+		for {
+			timer := time.NewTimer(closeConnMins * time.Minute)
+			after := timer.C
+			select {
+			case <-progress:
+				if !timer.Stop() {
+					<-after
+				}
+				continue
+			case <-after:
+				if ircClient != nil && ircClient.Connected() {
+					log.Debugf("No progress in %d minutes, closing irc connection", closeConnMins)
+					ircClient.Close()
+					ircClient = nil
+				}
+				continue
+			}
+		}
+	}()
+
 	for v := range packQueue {
 		counter.inc()
 
@@ -599,23 +623,6 @@ func QueueLoop() {
 
 		tracker := monitor.Add(job.packData.FileName, job.packData.Size)
 		tracker.Total = int64(job.packData.Size - job.transferData.startBytes)
-
-		progress := make(chan bool)
-
-		go func() {
-			for {
-				select {
-				case <-progress:
-					continue
-				case <-time.After(closeConnMins * time.Minute):
-					if ircClient != nil && ircClient.Connected() {
-						log.Debug("No progress in 5 minutes, closing irc connection")
-						ircClient.Close()
-						ircClient = nil
-					}
-				}
-			}
-		}()
 
 		go func() {
 			for {
@@ -637,6 +644,7 @@ func QueueLoop() {
 
 					} else if status == TRANSFER_PROGRESS {
 						tracker.SetValue(int64(transfer.transferedBytes - transfer.startBytes))
+						progress <- true
 
 					} else if status == TRANSFER_RESUME {
 						tracker.UpdateMessage(cRed + "[Resuming] " + cBlue + tracker.Message)
@@ -664,13 +672,12 @@ func QueueLoop() {
 			}
 
 		}()
-		// println("Queuing pack")
+
 		waitIrcReady()
+		counter.wait()
+
 		time.Sleep(10 * time.Second)
 
-		if counter.count >= max_dls {
-			counter.wait()
-		}
 	}
 }
 
