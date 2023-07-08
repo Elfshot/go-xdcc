@@ -100,42 +100,60 @@ func GetSeriesPacks(series string) ([]PackScheme, error) {
 	}
 
 	packs := []PackScheme{}
-	bots := getPreferedBots()
 
 	series = formatString(series)
-	// TODO create a non n^2 search 💀
-	for _, bot := range bots {
-
-		for _, pack := range search {
-			quals := qualRegexp.FindStringSubmatch(pack.Name)
-			if len(quals) <= 0 {
-				continue
-			}
-
-			if pack.BotId != bot.Id { // prefered bot
-				continue
-			}
-
-			if strings.EqualFold(quals[2]+"p", config.GetConfig().PreferedFormat) { // prefered quality
-				names := nameRegexp.FindStringSubmatch(pack.Name)
-				if len(names) <= 0 {
-					continue
-				}
-
-				name := formatString(names[2])
-
-				if strings.EqualFold(name, series) {
-					packs = append(packs, pack)
-				}
-			}
+	for _, pack := range search {
+		quals := qualRegexp.FindStringSubmatch(pack.Name)
+		if len(quals) <= 0 {
+			continue
 		}
 
-		if len(packs) > 0 {
-			break
+		if strings.EqualFold(quals[2]+"p", config.GetConfig().PreferedFormat) { // prefered quality
+			names := nameRegexp.FindStringSubmatch(pack.Name)
+			if len(names) <= 0 {
+				continue
+			}
+
+			name := formatString(names[2])
+
+			inArrI, arrPack := findInPacks(packs, pack.EpisodeNumber)
+			if inArrI >= 0 {
+				if getBotIdPrefPos(arrPack.BotId) < getBotIdPrefPos(pack.BotId) {
+					packs[inArrI] = pack
+					continue
+				} else {
+					continue
+				}
+			}
+
+			if strings.EqualFold(name, series) {
+				packs = append(packs, pack)
+				continue
+			}
+
 		}
 	}
 
 	return packs, nil
+}
+
+func getBotIdPrefPos(botId int) int {
+	bots := getPreferedBots()
+	for i, bot := range bots {
+		if bot.Id == botId {
+			return i
+		}
+	}
+	return -1
+}
+
+func findInPacks(packs []PackScheme, epNum int) (int, *PackScheme) {
+	for i, p := range packs {
+		if p.EpisodeNumber == epNum {
+			return i, &p
+		}
+	}
+	return -1, nil
 }
 
 // episode = 0 for all; sort is key of PackScheme (json version)
