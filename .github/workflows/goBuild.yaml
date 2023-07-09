@@ -1,0 +1,43 @@
+# This workflow will build a golang project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-go
+
+name: Build executable & Build image
+
+on:
+  push:
+    branches: [ "main", "actions" ]
+  pull_request:
+    branches: [ "main", "actions" ]
+
+jobs:
+  
+  buildExecutable:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Go
+      uses: actions/setup-go@v3
+      with:
+        go-version: "1.20.x"
+
+    - name: Install dependencies
+      run: go get .
+
+    - name: Build
+      run: go build
+
+#    - name: Test
+#      run: go test
+
+
+  buildImage:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag go-xdcc:$(date +%s)
+    - name: ls
+      run: ls
