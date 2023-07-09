@@ -32,11 +32,8 @@ jobs:
     - name: Build
       run: go build
 
-    - name: ls
-      run: ls -la
-    
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag go-xdcc:$(date +%s)
+      run: docker build . --file Dockerfile --tag goxdcc:$(date +%s)
 
     - name: Log in to the Container registry
       uses: docker/login-action@v2
@@ -49,7 +46,7 @@ jobs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: ghcr.io/go-xdcc
+        images: ghcr.io/goxdcc
 
     - name: Build and push Docker image
       uses: docker/build-push-action@v4
