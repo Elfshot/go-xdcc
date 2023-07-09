@@ -27,8 +27,7 @@ jobs:
       run: go get .
 
     - name: Build
-      run: env CGO_ENABLED=0
-      run: go build
+      run: env CGO_ENABLED=0 & go build
 
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag goxdcc:$(date +%s)
