@@ -22,7 +22,7 @@ chmod 766 -R config && chmod 766 downloads
 ## ⚙️ Example config.yaml
 ```yaml
 maxDownloads: 3 # Max number of downloads at once- 3 is the recommended max
-preferedBots: ["Ghouls|Arutha", "ARUTHA-BATCH|1080p", "ARUTHA-BATCH|720p", "ARUTHA|NEW"] # List of bots to prefer | This order is the order in which packs will be sourced from
+preferedBots: ["Ghouls|Arutha", "ARUTHA-BATCH|1080p", "ARUTHA-BATCH|720p", "CR-HOLLAND|NEW", "CR-ARUTHA|NEW"] # List of bots to prefer | This order is the order in which packs will be sourced from
 preferedFormat: "1080p" # 1080p, 720p, 480p
 downloadDir: "./downloads" # (Leave as-is for docker instances) Directory to download to
 #boundIp: "000.000.000.000" # (Optional [auto-binds to first available IP]) IP to bind to for DCC TCP connections
