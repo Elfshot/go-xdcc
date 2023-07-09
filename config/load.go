@@ -48,7 +48,7 @@ func (config *Config) LoadBaseConfig() {
 		os.Create("config/config.yaml")
 		os.Chmod("config/config.yaml", 0766)
 		os.Chown("config/config.yaml", os.Getuid(), os.Getgid())
-		log.Fatal("Config file created. Please edit config/config.yaml and restart the program" +
+		log.Fatal("Config file created. Please edit config/config.yaml and restart the program.\n" +
 			"Consider using the example config file as a template and adding trackers.")
 	}
 
@@ -65,7 +65,10 @@ func (config *Config) LoadBaseConfig() {
 	}
 
 	// Check critial config values
-	// Stub
+	if config.IRC.Server == "" || config.DownloadDir == "" ||
+		len(config.PreferedBots) == 0 || config.MaxDownloads == 0 {
+		log.Fatal("Config file is invalid. ")
+	}
 
 	// Add trailing slash to download dir if it doesn't exist
 	if config.DownloadDir[len(config.DownloadDir)-1:] != "/" {
@@ -85,6 +88,7 @@ func (cfg *Config) LoadTrackers() {
 	files, err := os.ReadDir("config/trackers")
 	if err != nil {
 		log.Error("Failed to read trackers directory: ", err.Error())
+		os.Mkdir("config/trackers", 0766)
 		return
 	}
 	for _, file := range files {

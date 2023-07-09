@@ -12,10 +12,9 @@ services:
         cpus: '1.5' # 1.5 cores
         memory: 1G
       reservations: # Minimum resources
-        cpus: '0.05' # 5% of a core
         memory: 100M
     volumes:
-      - pathToLocalConfig:/xdcc/config:ro
+      - pathToLocalConfig:/xdcc/config:rw
       - pathToLocalDownloads:/xdcc/downloads:rw
     restart: unless-stopped
     environment:
