@@ -42,8 +42,8 @@ type Tracker struct {
 
 func (config *Config) LoadBaseConfig() {
 
-	// Create config dir if it doesn't exist then exit
-	if _, err := os.Stat("config"); os.IsNotExist(err) {
+	// Create config file if it doesn't exist then exit
+	if _, err := os.Stat("config/config.yaml"); os.IsNotExist(err) {
 		os.Mkdir("config", 0766)
 		os.Create("config/config.yaml")
 		os.Chmod("config/config.yaml", 0766)
