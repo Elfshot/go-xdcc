@@ -11,7 +11,7 @@ on:
 
 jobs:
   
-  buildExecutable:
+  buildExecutableAndImage:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
@@ -27,18 +27,12 @@ jobs:
     - name: Build
       run: go build
 
-#    - name: Test
-#      run: go test
-
-
-  buildImage:
-
-    runs-on: ubuntu-latest
-    needs: buildExecutable
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag go-xdcc:$(date +%s)
     - name: ls
       run: ls
+
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag go-xdcc:$(date +%s)
+
+
+#    - name: Test
+#      run: go test
