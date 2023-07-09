@@ -58,15 +58,15 @@ func getPreferedBots() []BotScheme {
 		return preferedBots
 	}
 	preferedBots = []BotScheme{}
-	botIds := config.GetConfig().PreferedBots
+	botNames := config.GetConfig().PreferedBots
 	bots, err := loadBots()
 	if err != nil {
 		log.Error("Cannot load bots:\n" + err.Error())
 	}
 
-	for _, botId := range botIds {
+	for _, botName := range botNames {
 		for _, bot := range bots {
-			if bot.Id == botId {
+			if bot.Name == botName {
 				preferedBots = append(preferedBots, bot)
 			}
 		}

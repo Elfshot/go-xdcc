@@ -12,7 +12,7 @@ var gConfig *Config
 
 // Create a config struct to hold the config data
 type Config struct {
-	PreferedBots     []int     `yaml:"preferedBots"`
+	PreferedBots     []string  `yaml:"preferedBots"`
 	MaxDownloads     int       `yaml:"maxDownloads"`
 	PreferedFormat   string    `yaml:"preferedFormat"`
 	DownloadDir      string    `yaml:"downloadDir"`
@@ -44,6 +44,7 @@ func (config *Config) LoadBaseConfig() {
 
 	// Create config file if it doesn't exist then exit
 	if _, err := os.Stat("config/config.yaml"); os.IsNotExist(err) {
+		// no work
 		os.Mkdir("config", 0766)
 		os.Create("config/config.yaml")
 		os.Chmod("config/config.yaml", 0766)
@@ -87,6 +88,7 @@ func (cfg *Config) LoadTrackers() {
 
 	files, err := os.ReadDir("config/trackers")
 	if err != nil {
+		// no work
 		log.Error("Failed to read trackers directory: ", err.Error())
 		os.Mkdir("config/trackers", 0766)
 		return
