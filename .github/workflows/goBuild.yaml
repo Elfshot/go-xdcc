@@ -33,8 +33,8 @@ jobs:
       run: go build
 
     - name: ls
-      run: ls
-
+      run: ls -la
+    
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag go-xdcc:$(date +%s)
 
