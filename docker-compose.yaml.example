@@ -1,0 +1,24 @@
+version: "3.5"
+services:
+  goxdcc:
+    image: "ghcr.io/elfshot/goxdcc:main"
+    working_dir: /xdcc
+    container_name: "goxdcc"
+    # Use network mode to attach a VPN or proxy container as DDC connections are not encrypted
+    # network_mode: "container:<container hosting network name or id | No arrows>"
+    user: 1000:1000
+    resources:
+      limits: # Absolute limits
+        cpus: '1.5' # 1.5 cores
+        memory: 1G
+      reservations: # Minimum resources
+        cpus: '0.05' # 5% of a core
+        memory: 100M
+    volumes:
+      - pathToLocalConfig:/xdcc/config:ro
+      - pathToLocalDownloads:/xdcc/downloads:rw
+    restart: unless-stopped
+    environment:
+      - LOG_LEVEL=INFO #DEBUG, INFO, ERROR (Default)
+    tty: true
+    stdin_open: true

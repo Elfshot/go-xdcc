@@ -42,6 +42,16 @@ type Tracker struct {
 
 func (config *Config) LoadBaseConfig() {
 
+	// Create config dir if it doesn't exist then exit
+	if _, err := os.Stat("config"); os.IsNotExist(err) {
+		os.Mkdir("config", 0766)
+		os.Create("config/config.yaml")
+		os.Chmod("config/config.yaml", 0766)
+		os.Chown("config/config.yaml", os.Getuid(), os.Getgid())
+		log.Fatal("Config file created. Please edit config/config.yaml and restart the program" +
+			"Consider using the example config file as a template and adding trackers.")
+	}
+
 	// Read config file into byte array
 	byteValue, err := os.ReadFile("config/config.yaml")
 	if err != nil {

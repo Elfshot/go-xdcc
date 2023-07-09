@@ -13,3 +13,4 @@ config/trackers/archive/*.yaml
 config/config.yaml
 downloads/*
 *tmp*
+docker-compose.yaml
