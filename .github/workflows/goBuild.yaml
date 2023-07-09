@@ -27,6 +27,7 @@ jobs:
       run: go get .
 
     - name: Build
+      run: env CGO_ENABLED=0
       run: go build
 
     - name: Build the Docker image
