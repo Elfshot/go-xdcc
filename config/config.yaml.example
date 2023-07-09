@@ -1,5 +1,5 @@
 maxDownloads: 3 # Max number of downloads at once- 3 is the recommended max
-preferedBots: [835, 836, 1010, 696]
+preferedBots: ["Ghouls|Arutha", "ARUTHA-BATCH|1080p", "ARUTHA-BATCH|720p", "ARUTHA|NEW"]
 preferedFormat: "1080p" 
 downloadDir: "./downloads" 
 boundIp: "000.000.000.000" # Can be left blank- auto-binds to first available IP
