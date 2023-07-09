@@ -26,8 +26,11 @@ jobs:
     - name: Install dependencies
       run: go get .
 
+    - name: Set environment
+      run: env CGO_ENABLED=0 & env GOOS=linux & env GOARCH=amd64
+
     - name: Build
-      run: go build
+      run: go build -tags netgo -a -v
 
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag goxdcc:$(date +%s)
