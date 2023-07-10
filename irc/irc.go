@@ -146,8 +146,8 @@ func (session *session) startTransfer(irc *irc.Conn) {
 
 	oldSize, err := getFileSize(newFileDir)
 	if err != nil {
-		log.Error(err)
 		session.sendEvent(TRANSFER_ERROR)
+		log.Error(err)
 		return
 	}
 	transferData.transferedBytes, transferData.startBytes = oldSize, oldSize
@@ -171,8 +171,8 @@ func (session *session) startTransfer(irc *irc.Conn) {
 
 	file, err := os.OpenFile(newFileDir, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
 	if err != nil {
-		log.Println(err)
 		session.sendEvent(TRANSFER_ERROR)
+		log.Println(err)
 		return
 	}
 
@@ -181,8 +181,8 @@ func (session *session) startTransfer(irc *irc.Conn) {
 	conn, err := openTcpConn(transferData.targetIp, transferData.targetPort)
 
 	if err != nil {
-		log.Println(err)
 		session.sendEvent(TRANSFER_ERROR)
+		log.Println(err)
 		return
 	}
 
@@ -190,47 +190,93 @@ func (session *session) startTransfer(irc *irc.Conn) {
 	buffer := make([]byte, bufferSize)
 	transferData.unixStart = time.Now().Unix()
 	session.sendEvent(TRANSFER_START)
-	for {
-		bytesRead, err := conn.Read(buffer)
-		if err != nil {
-			log.Println(err)
-			session.sendEvent(TRANSFER_ERROR)
-			break
-		}
 
-		_, err = writer.Write(buffer[:bytesRead])
+	inQuit := make(chan bool, 1)
+	inProgress := make(chan bool, 1)
+	outQuit := make(chan bool, 1)
 
-		if err != nil {
-			log.Println(err)
-			session.sendEvent(TRANSFER_ERROR)
+	closeConnDur := time.Duration(config.GetConfig().IRC.MaxTcpIdleTime) * time.Second
 
-			return
-		}
+	go func() {
+		for {
+			timer := time.NewTimer(closeConnDur)
+			after := timer.C
+			select {
+			case <-inQuit:
+				return
 
-		buffer = make([]byte, bufferSize)
+			case <-inProgress:
+				if !timer.Stop() {
+					<-after
+				}
+				continue
 
-		transferData.transferedBytes += bytesRead
-
-		session.sendEvent(TRANSFER_PROGRESS)
-
-		if session.stopTranferConditions() {
-			if writer.Buffered() > 0 {
-				writer.Flush()
+			case <-after:
+				outQuit <- true
+				return
 			}
-			conn.Close()
-			file.Close()
-			transferData.unixEnd = time.Now().Unix()
-			session.sendEvent(TRANSFER_FINISH)
+		}
+	}()
 
-			// if status == TRANSFER_STATUS_CANCELED {deletefile}
+	for {
+		select {
+		case <-outQuit:
+			session.sendEvent(TRANSFER_ERROR)
+			endTransfer(writer, conn, file, transferData)
+			return
+		default:
+			conn.SetReadDeadline(time.Now().Add(closeConnDur))
+			bytesRead, err := conn.Read(buffer)
 
-			break
+			if err != nil {
+				session.sendEvent(TRANSFER_ERROR)
+				log.Println(err)
+				endTransfer(writer, conn, file, transferData)
+				inQuit <- true
+				return
+			}
+
+			_, err = writer.Write(buffer[:bytesRead])
+
+			if err != nil {
+				session.sendEvent(TRANSFER_ERROR)
+				log.Println(err)
+				endTransfer(writer, conn, file, transferData)
+				inQuit <- true
+				return
+			}
+
+			buffer = make([]byte, bufferSize)
+
+			transferData.transferedBytes += bytesRead
+
+			session.sendEvent(TRANSFER_PROGRESS)
+			inProgress <- true
+
+			if session.stopTranferConditions() {
+				session.sendEvent(TRANSFER_FINISH)
+				endTransfer(writer, conn, file, transferData)
+
+				inQuit <- true
+				log.Debugf("Done Transfer for %s", packData.FileName)
+				os.Rename(newFileDir, packData.GetFileDir())
+				log.Debugf("Renamed file from %s to %s", newFileDir, packData.GetFileDir())
+				return
+			}
 		}
 	}
-	log.Debugf("Done Transfer for %s", packData.FileName)
+}
 
-	os.Rename(newFileDir, packData.GetFileDir())
-	log.Debugf("Renamed file from %s to %s", newFileDir, packData.GetFileDir())
+func endTransfer(writer *bufio.Writer, conn net.Conn, file *os.File, transferData *transfer) {
+	if writer.Buffered() > 0 {
+		writer.Flush()
+	}
+	conn.Close()
+	file.Close()
+	transferData.unixEnd = time.Now().Unix()
+
+	// Extra sleep to ensure that any sendEvent() calls have been processed
+	time.Sleep(200 * time.Millisecond)
 }
 
 func (session *session) stopTranferConditions() bool {
@@ -300,9 +346,29 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 
 	registerHandlers(ircClient, jobs, ready, quit)
 
-	if err := ircClient.Connect(); err != nil {
-		quit <- false
-		log.Fatalf("Connection error: %s\n", err.Error())
+	finishConnect := make(chan bool, 1)
+
+	go func() {
+		if err := ircClient.Connect(); err != nil {
+			log.Fatalf("Connection error: %s\n", err.Error())
+			return
+		}
+		finishConnect <- true
+	}()
+
+	select {
+	case <-finishConnect:
+		break
+	case <-time.After(10 * time.Second):
+		if retries >= 3 {
+			log.Fatalf("Connection error: %s\n", "maximum number of retries reached for IRC network connection")
+		}
+		if ircClient != nil {
+			ircClient.Close()
+			ircClient = nil
+		}
+		close(quit)
+		return getIrc(jobs, retries+1)
 	}
 
 	select {
@@ -316,7 +382,7 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 			ircClient.Close()
 			ircClient = nil
 		}
-		quit = nil
+		close(quit)
 		return getIrc(jobs, retries+1)
 	}
 }
@@ -325,13 +391,6 @@ func getPack(bot string, packNum int, jobs chan *session) (quit chan bool) {
 	quit, ircClient := getIrc(jobs, 0)
 
 	ircClient.Privmsg(bot, "xdcc send #"+strconv.Itoa(packNum))
-
-	// select {
-	// case <-quit:
-	// 	return nil, errors.New("irc client error")
-	// case <-time.After(5 * time.Second):
-	// 	ircClient.Close()
-	// }
 
 	return quit
 }
@@ -347,16 +406,6 @@ func findPack(packName string) *Pack {
 
 func parseCtcpString(ctcpRes *irc.Line) (*session, error) {
 
-	// packStub := &Pack{
-	// 	BotNick:    ctcpRes.Nick,
-	// 	FileName:   "",
-	// 	Size:       0,
-	// 	ShowName:   "",
-	// 	Season:     0,
-	// 	Episode:    0,
-	// 	PackNumber: 0,
-	// }
-
 	transferStub := &transfer{
 		unixStart:       0,
 		unixEnd:         0,
@@ -365,7 +414,7 @@ func parseCtcpString(ctcpRes *irc.Line) (*session, error) {
 		targetPort:      0,
 		targetIp:        nil,
 
-		events: make(chan *events, 10),
+		events: make(chan *events, 1),
 	}
 
 	fields := strings.Fields(ctcpRes.Text())[1:]
@@ -423,7 +472,7 @@ func createIrcClient() (*irc.Conn, chan bool) {
 	cfg.Me.Ident = randName(6)
 	c := irc.Client(cfg)
 
-	log.Infof("Using | Nick %s | Name %s | Ident %s\n", c.Me().Nick, c.Me().Name, c.Me().Ident)
+	log.Infof("Using | Nick %s | Name %s | Ident %s", c.Me().Nick, c.Me().Name, c.Me().Ident)
 
 	quit := make(chan bool)
 
@@ -633,7 +682,7 @@ func QueueLoop() {
 				case event := <-job.transferData.events:
 					transfer := event.TransferData
 					status := event.EventType
-					// log.Debug(event.EventType, transfer.status)
+
 					if status == TRANSFER_FINISH || status == TRANSFER_CANCEL {
 						tracker.SetValue(int64(transfer.transferedBytes))
 
@@ -664,6 +713,7 @@ func QueueLoop() {
 						counter.dec()
 
 						// Keep track of retries + add retry flag/event
+						removeFinishedPack(job.packData)
 						QueuePack(job.packData, monitor)
 
 						return

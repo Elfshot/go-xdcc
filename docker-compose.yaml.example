@@ -7,15 +7,16 @@ services:
     # Use network mode to attach a VPN or proxy container as DDC connections are not encrypted
     # network_mode: "container:<container hosting network name or id | No arrows>"
     user: 1000:1000
-    resources:
-      limits: # Absolute limits
-        cpus: '1.5' # 1.5 cores
-        memory: 1G
-      reservations: # Minimum resources
-        memory: 100M
+    deploy:
+      resources:
+        limits: # Absolute limits
+          cpus: '1.5' # 1.5 cores
+          memory: 1G
+        reservations: # Minimum resources
+          memory: 100M
     volumes:
-      - pathToLocalConfig:/xdcc/config:rw
-      - pathToLocalDownloads:/xdcc/downloads:rw
+      - ./config:/xdcc/config:rw
+      - ./downloads:/xdcc/downloads:rw
     restart: unless-stopped
     environment:
       - LOG_LEVEL=INFO #DEBUG, INFO, ERROR (Default)

@@ -11,9 +11,12 @@ mkdir -p config/trackers
 mkdir downloads
 
 curl https://raw.githubusercontent.com/Elfshot/go-xdcc/main/config/config.yaml.example -o config/config.yaml -s
+curl https://raw.githubusercontent.com/Elfshot/go-xdcc/main/docker-compose.yaml.example -o docker-compose.yaml -s
 
 chown 1000:1000 -R config && chown 1000:1000 downloads
 chmod 766 -R config && chmod 766 downloads
+
+docker-compose up -d
 ```
 > Note: The above commands assume that the application is running as user 1000:1000.
 
@@ -34,6 +37,7 @@ irc:
   channelName: "#nibl"
   closeConnectionMins: 5 # Time in minutes of an idle irc connection before closing it
   maxWaitIrcCycles: 25 # Max number of irc cycles to wait for a download to start before erroring
+  maxTcpIdleTime: 60 # Maximum number of seconds for a TCP connection to idle before aborting a transfer
 ```
 [NIBL Bots](https://nibl.co.uk/bots) should be used to find the prefered bots. The names should be copied over exactly.
 
@@ -54,9 +58,12 @@ episodeRange: [ 1,24 ]
 | season | The season number |
 | episodeRange | The range of episodes to download. These values are inclusive |
 
-[TheTVDB](https://thetvdb.com/) should be used to determine the season number, episode ranges, and file name.
+- [TheTVDB](https://thetvdb.com/) should be used to determine the season number, episode ranges, and file name.
 
-[NIBL](https://nibl.co.uk/) should be used to determine the search name.
+- [NIBL](https://nibl.co.uk/) should be used to determine the search name.
+
+- Any tracker files in the subdirectories of config/trackers will be ignored.
+
 
 ## 🐳 Example docker-compose.yaml
 ```yaml
@@ -69,15 +76,16 @@ services:
     # Use network mode to attach a VPN or proxy container as DDC connections are not encrypted
     # network_mode: "container:<container hosting network name or id | No arrows>"
     user: 1000:1000
-    resources:
-      limits: # Absolute limits
-        cpus: '1.5' # 1.5 cores
-        memory: 1G
-      reservations: # Minimum resources
-        memory: 100M
+    deploy:
+      resources:
+        limits: # Absolute limits
+          cpus: '1.5' # 1.5 cores
+          memory: 1G
+        reservations: # Minimum resources
+          memory: 100M
     volumes:
-      - pathToLocalConfig:/xdcc/config:rw
-      - pathToLocalDownloads:/xdcc/downloads:rw
+      - ./config:/xdcc/config:rw
+      - ./downloads:/xdcc/downloads:rw
     restart: unless-stopped
     environment:
       - LOG_LEVEL=INFO #DEBUG, INFO, ERROR (Default)

@@ -29,6 +29,7 @@ type ircConfig struct {
 	NickName            string `yaml:"nick"`
 	CloseConnectionMins int    `yaml:"closeConnectionMins"`
 	MaxWaitIrcCycles    int    `yaml:"maxWaitIrcCycles"`
+	MaxTcpIdleTime      int    `yaml:"maxTcpIdleTime"`
 }
 
 type Tracker struct {
