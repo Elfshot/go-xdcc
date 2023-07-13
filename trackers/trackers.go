@@ -26,10 +26,13 @@ func runTrackers(pw *progress.Monitor) {
 	cfg.LoadTrackers()
 	trackers := cfg.Trackers
 
+	failures := 0
+
 	for _, tracker := range trackers {
 		time.Sleep(5 * time.Second)
 		packs, err := search.GetSeriesPacks(tracker.SearchName)
 		if err != nil {
+			failures++
 			continue
 		}
 		for _, pack := range packs {
@@ -72,5 +75,8 @@ func runTrackers(pw *progress.Monitor) {
 
 			irc.QueuePack(sPack, pw)
 		}
+	}
+	if failures >= len(trackers)/2 {
+		log.Fatal("Too many tracker failures in getting packs. Exiting...")
 	}
 }

@@ -68,8 +68,9 @@ func (config *Config) LoadBaseConfig() {
 
 	// Check critial config values
 	if config.IRC.Server == "" || config.DownloadDir == "" ||
-		len(config.PreferedBots) == 0 || config.MaxDownloads == 0 {
-		log.Fatal("Config file is invalid. ")
+		len(config.PreferedBots) == 0 || config.MaxDownloads == 0 ||
+		config.IRC.MaxTcpIdleTime == 0 {
+		log.Fatal("Config file is invalid. Please refer to the example config file.")
 	}
 
 	// Add trailing slash to download dir if it doesn't exist
