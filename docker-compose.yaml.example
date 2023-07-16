@@ -22,3 +22,8 @@ services:
       - LOG_LEVEL=INFO #DEBUG, INFO, ERROR (Default)
     tty: true
     stdin_open: true
+    healthcheck:
+      test: ./go-xdcc test
+      interval: 60s
+      timeout: 4s
+      retries: 2

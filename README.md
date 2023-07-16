@@ -91,4 +91,10 @@ services:
       - LOG_LEVEL=INFO #DEBUG, INFO, ERROR (Default)
     tty: true
     stdin_open: true
+    healthcheck:
+      test: ./go-xdcc test
+      interval: 60s
+      timeout: 4s
+      retries: 2
 ```
+Note: The health check is not required, but is recommended to ensure that the application is running correctly. Use in combination with [docker-autoheal](https://github.com/willfarrell/docker-autoheal) to automatically restart the container if it fails.
