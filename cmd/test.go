@@ -1,6 +1,8 @@
 package cmd
 
 import (
+	"os"
+
 	"github.com/Elfshot/go-xdcc/search"
 	"github.com/spf13/cobra"
 
@@ -20,5 +22,7 @@ var versionCmd = &cobra.Command{
 		if err != nil || len(res) != 10 {
 			log.Fatal(err)
 		}
+
+		os.Exit(0)
 	},
 }
