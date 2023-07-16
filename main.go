@@ -2,12 +2,8 @@ package main
 
 import (
 	"os"
-	"sync"
 
-	"github.com/Elfshot/go-xdcc/irc"
-	"github.com/Elfshot/go-xdcc/progress"
-	"github.com/Elfshot/go-xdcc/trackers"
-
+	cmd "github.com/Elfshot/go-xdcc/cmd"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -24,23 +20,10 @@ func initLog() {
 	}
 }
 
-func runXdcc() *progress.Monitor {
-	initLog()
-	var pw progress.Monitor
-	pw.Init()
-	go irc.QueueLoop()
-
-	return &pw
-}
-
 func main() {
-	pw := runXdcc()
+	initLog()
 
-	go trackers.InitTrackers(pw)
-
-	wg := sync.WaitGroup{}
-	wg.Add(1)
-	wg.Wait()
+	cmd.Execute()
 }
 
 // add a better ready flag
