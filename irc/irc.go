@@ -55,11 +55,6 @@ func uint32ToIP(n int) net.IP {
 	return net.IPv4(a, b, c, d)
 }
 
-// func roundFloat(val float64, precision uint) float64 {
-// 	ratio := math.Pow(10, float64(precision))
-// 	return math.Round(val*ratio) / ratio
-// }
-
 type transfer struct {
 	status          int
 	unixStart       int64
@@ -163,9 +158,9 @@ func (session *session) startTransfer(irc *irc.Conn) {
 		// ddc resume
 		irc.Ctcp(packData.BotNick, "DCC RESUME "+" \""+packData.FileName+"\" "+" "+strconv.Itoa(transferData.targetPort)+" "+strconv.Itoa(oldSize))
 		session.sendEvent(TRANSFER_RESUME)
-		// fix instead of sleep wait for the ACCEPT message
-		// ACCEPT "[SUBSPLEASE] KOORI ZOKUSEI DANSHI TO COOL NA DOURYOU JOSHI - 05 (1080P)" 12354 473794808
-		// Method, "name", port, new start position
+		// TODO fix instead of sleep wait for the ACCEPT message
+		// TODO ACCEPT "[SUBSPLEASE] KOORI ZOKUSEI DANSHI TO COOL NA DOURYOU JOSHI - 05 (1080P)" 12354 473794808
+		// TODO Method, "name", port, new start position
 		time.Sleep(5 * time.Second)
 	}
 
@@ -514,7 +509,7 @@ func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit cha
 	c.HandleFunc(irc.ERROR,
 		func(conn *irc.Conn, line *irc.Line) {
 			log.Error("Error in IRC Client: " + line.Text())
-			// conn.Close()
+			//// conn.Close()
 		})
 
 	c.HandleFunc(irc.CTCP,
@@ -522,8 +517,8 @@ func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit cha
 			text := l.Text()
 			textLower := strings.ToLower(text)
 			arg0 := strings.SplitN(textLower, " ", 2)[0]
-			// "ACCEPT \"[HORRIBLESUBS] DR. STONE - 21 [1080P].MKV\" 41335 786432000"
-			// Should followup after this send handle to begin the transfer
+			// TODO "ACCEPT \"[HORRIBLESUBS] DR. STONE - 21 [1080P].MKV\" 41335 786432000"
+			// TODO Should followup after this send handle to begin the transfer
 			if strings.EqualFold(arg0, "send") {
 				log.Info("CTCP: " + text)
 
@@ -549,7 +544,7 @@ func getFileSize(f string) (int, error) {
 	fileStub, _ := os.OpenFile(f, os.O_APPEND|os.O_CREATE, 0777)
 	fileStub.Close()
 
-	// Fast/Usually accurate
+	// ?Fast/Usually accurate
 	/*
 		g, err := os.Stat(f)
 
@@ -561,7 +556,7 @@ func getFileSize(f string) (int, error) {
 		return int(g.Size()), nil
 	*/
 
-	// Slow/Always accurate
+	// *Slow/Always accurate | High Memory
 	/*
 		data, err := os.ReadFile(f)
 		if err != nil {

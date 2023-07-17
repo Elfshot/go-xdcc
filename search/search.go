@@ -21,7 +21,7 @@ type PackScheme struct {
 	Name          string `json:"name"`
 	Size          string `json:"size"` // 1.2GB or 1.2MB or 1.2KB
 	Sizekbits     int    `json:"sizekbits"`
-	// Number        int    `json:"number"`
+	//// Number        int    `json:"number"`
 
 }
 
@@ -33,7 +33,7 @@ type BotScheme struct {
 	Owner         string       `json:"owner"`
 	PackList      []PackScheme `json:"packList"`
 	PackSize      int          `json:"packSize"`
-	// LastSeen      string       `json:"lastSeen"`      // yyyy-MM-dd HH:mm:ss
+	//// LastSeen      string       `json:"lastSeen"`      // yyyy-MM-dd HH:mm:ss
 }
 
 type niblApiRes[T any] struct {
@@ -52,7 +52,6 @@ var preferedBots []BotScheme
 var nameRegexp = regexp.MustCompile(`^(\[\w+\]){1,2}\s(.*?)\s-\s(\d+)?(v\d+)?(\s(\(\w+p\)|(\[\w+p\]))?){1,2}.*$`)
 var qualRegexp = regexp.MustCompile(`(\[|\()(1080|720|540|480|360)p(\]|\))`)
 
-// return in order
 func getPreferedBots() []BotScheme {
 	if preferedBots != nil {
 		return preferedBots
