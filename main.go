@@ -36,4 +36,5 @@ connection will sometimes hang before tls connection, do the events and recreate
 "You already requested that pack"
 Apply config defaults
 check CRC checksums after resumes (optionally downloads)
+custom regex for pack names and crcs (quality should be fine)
 */

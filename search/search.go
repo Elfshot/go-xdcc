@@ -48,9 +48,16 @@ type jsonContent[T any] struct {
 
 var preferedBots []BotScheme
 
-// Group 2: name; Group 3: episode; Group 4: version
-var nameRegexp = regexp.MustCompile(`^(\[\w+\]){1,2}\s(.*?)\s-\s(\d+)?(v\d+)?(\s(\(\w+p\)|(\[\w+p\]))?){1,2}.*$`)
+// Group 1: group; Group 2: show; Group 3: episode; Group 5: version (optional)
+// TODO: add version check and add it to the pack struct
+var nameRegexp = regexp.MustCompile(`^(\[[a-zA-z]+\]).*?\s(.*?)\s-\s(\d+)?(v\d+)?.*$`)
+
+// Group 2: quality
 var qualRegexp = regexp.MustCompile(`(\[|\()(1080|720|540|480|360)p(\]|\))`)
+
+// Group 1: CRC
+// TODO: add CRC check and add it to the pack struct
+var crcRegexp = regexp.MustCompile(`\[([a-zA-Z0-9]{8})\]`)
 
 func getPreferedBots() []BotScheme {
 	if preferedBots != nil {
