@@ -86,7 +86,6 @@ services:
       resources:
         limits: # Absolute limits
           cpus: '1.5' # 1.5 cores
-          memory: 1G
         reservations: # Minimum resources
           memory: 100M
     volumes:
