@@ -476,7 +476,7 @@ func createIrcClient() (*irc.Conn, chan bool) {
 	}
 
 	cfg.Me.Name = randName(8)
-	cfg.Me.Ident = randName(6)
+	cfg.Me.Ident = "go-xdcc"
 	c := irc.Client(cfg)
 
 	log.Infof("Using | Nick %s | Name %s | Ident %s", c.Me().Nick, c.Me().Name, c.Me().Ident)
