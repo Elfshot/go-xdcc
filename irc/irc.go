@@ -366,7 +366,7 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 	select {
 	case <-finishConnect:
 		break
-	case <-time.After(10 * time.Second):
+	case <-time.After(30 * time.Second):
 		if retries >= 3 {
 			log.Fatalf("Connection error: %s\n", "maximum number of retries reached for IRC network connection")
 		}
@@ -494,6 +494,18 @@ func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit cha
 		})
 
 	c.HandleFunc(irc.CTCP,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+
+	c.HandleFunc(irc.ACTION,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+
+	c.HandleFunc(irc.KICK,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+
+	c.HandleFunc(irc.QUIT,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+
+	c.HandleFunc(irc.REGISTER,
 		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
 
 	c.HandleFunc(irc.PRIVMSG,
