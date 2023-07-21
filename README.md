@@ -73,7 +73,7 @@ episodeRange: [ 1,24 ]
 ## 🐳 Example docker-compose.yaml
 
 ```yaml
-version: "3.5"
+version: "3.8"
 services:
   goxdcc:
     image: "ghcr.io/elfshot/goxdcc:main"
@@ -101,6 +101,9 @@ services:
       interval: 60s
       timeout: 4s
       retries: 2
+    logging:
+      options:
+        max-size: 10m # Max log file size (10m, 50m, 1g, ...)
 ```
 
 > Note: The health check is not required, but is recommended to ensure that the application is running correctly. Use in combination with [docker-autoheal](https://github.com/willfarrell/docker-autoheal) to automatically restart the container if it fails.
