@@ -21,8 +21,10 @@ type PackScheme struct {
 	Name          string `json:"name"`
 	Size          string `json:"size"` // 1.2GB or 1.2MB or 1.2KB
 	Sizekbits     int    `json:"sizekbits"`
-	//// Number        int    `json:"number"`
 
+	// *Not always given
+	Crc32 string `json:"-"`
+	//// Number        int    `json:"number"`
 }
 
 type BotScheme struct {
@@ -49,7 +51,7 @@ type jsonContent[T any] struct {
 var preferedBots []BotScheme
 
 // Group 1: group; Group 2: show; Group 3: episode; Group 5: version (optional)
-// TODO: add version check and add it to the pack struct
+// TODO: add version check and add it to the pack struct (allow S01E01v2 [checksum?].mkv)
 var nameRegexp = regexp.MustCompile(`^(\[[a-zA-z]+\]).*?\s(.*?)\s-\s(\d+)?(v\d+)?.*$`)
 
 // Group 2: quality
@@ -121,6 +123,10 @@ func GetSeriesPacks(series string) ([]PackScheme, error) {
 			}
 
 			name := formatString(names[2])
+			crc32 := crcRegexp.FindStringSubmatch(pack.Name)[1]
+			if len(crc32) > 0 {
+				pack.Crc32 = crc32
+			}
 
 			inArrI, arrPack := findInPacks(packs, pack.EpisodeNumber)
 			if inArrI >= 0 {
