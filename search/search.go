@@ -52,7 +52,7 @@ var preferedBots []BotScheme
 
 // Group 1: group; Group 2: show; Group 3: episode; Group 5: version (optional)
 // TODO: add version check and add it to the pack struct (allow S01E01v2 [checksum?].mkv)
-var nameRegexp = regexp.MustCompile(`^(\[[a-zA-z]+\]).*?\s(.*?)\s-\s(\d+)?(v\d+)?.*$`)
+var nameRegexp = regexp.MustCompile(`^(\[[a-zA-z]+\]).*?\s(.*?)\s-\s(\d+)(v\d+)?.*$`)
 
 // Group 2: quality
 var qualRegexp = regexp.MustCompile(`(\[|\()(1080|720|540|480|360)p(\]|\))`)
