@@ -21,8 +21,10 @@ type PackScheme struct {
 	Name          string `json:"name"`
 	Size          string `json:"size"` // 1.2GB or 1.2MB or 1.2KB
 	Sizekbits     int    `json:"sizekbits"`
-	// Number        int    `json:"number"`
 
+	// *Not always given
+	Crc32 string `json:"-"`
+	//// Number        int    `json:"number"`
 }
 
 type BotScheme struct {
@@ -33,7 +35,7 @@ type BotScheme struct {
 	Owner         string       `json:"owner"`
 	PackList      []PackScheme `json:"packList"`
 	PackSize      int          `json:"packSize"`
-	// LastSeen      string       `json:"lastSeen"`      // yyyy-MM-dd HH:mm:ss
+	//// LastSeen      string       `json:"lastSeen"`      // yyyy-MM-dd HH:mm:ss
 }
 
 type niblApiRes[T any] struct {
@@ -48,11 +50,17 @@ type jsonContent[T any] struct {
 
 var preferedBots []BotScheme
 
-// Group 2: name; Group 3: episode; Group 4: version
-var nameRegexp = regexp.MustCompile(`^(\[\w+\]){1,2}\s(.*?)\s-\s(\d+)?(v\d+)?(\s(\(\w+p\)|(\[\w+p\]))?){1,2}.*$`)
+// Group 1: group; Group 2: show; Group 3: episode; Group 5: version (optional)
+// TODO: add version check and add it to the pack struct (allow S01E01v2 [checksum?].mkv)
+var nameRegexp = regexp.MustCompile(`^(\[[a-zA-z]+\]).*?\s(.*?)\s-\s(\d+)(v\d+)?.*$`)
+
+// Group 2: quality
 var qualRegexp = regexp.MustCompile(`(\[|\()(1080|720|540|480|360)p(\]|\))`)
 
-// return in order
+// Group 1: CRC
+// TODO: add CRC check and add it to the pack struct
+var crcRegexp = regexp.MustCompile(`\[([a-zA-Z0-9]{8})\]`)
+
 func getPreferedBots() []BotScheme {
 	if preferedBots != nil {
 		return preferedBots
@@ -115,6 +123,10 @@ func GetSeriesPacks(series string) ([]PackScheme, error) {
 			}
 
 			name := formatString(names[2])
+			crc32 := crcRegexp.FindStringSubmatch(pack.Name)[1]
+			if len(crc32) > 0 {
+				pack.Crc32 = crc32
+			}
 
 			inArrI, arrPack := findInPacks(packs, pack.EpisodeNumber)
 			if inArrI >= 0 {

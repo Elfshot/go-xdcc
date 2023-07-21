@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"hash/crc32"
 	"math/rand"
 	"net"
 	"os"
@@ -55,11 +56,6 @@ func uint32ToIP(n int) net.IP {
 	return net.IPv4(a, b, c, d)
 }
 
-// func roundFloat(val float64, precision uint) float64 {
-// 	ratio := math.Pow(10, float64(precision))
-// 	return math.Round(val*ratio) / ratio
-// }
-
 type transfer struct {
 	status          int
 	unixStart       int64
@@ -68,8 +64,8 @@ type transfer struct {
 	transferedBytes int
 	targetPort      int
 	targetIp        net.IP
-
-	events chan *events
+	isResume        bool
+	events          chan *events
 }
 
 type Pack struct {
@@ -81,6 +77,9 @@ type Pack struct {
 	Season      int
 	Episode     int
 	PackNumber  int
+
+	// * Not always given
+	Crc32 string
 }
 
 type session struct {
@@ -94,6 +93,7 @@ type events struct {
 	TransferData *transfer
 }
 
+// Events
 const (
 	TRANSFER_START       = iota // 0
 	TRANSFER_PAUSE              // 1
@@ -103,8 +103,10 @@ const (
 	TRANSFER_PROGRESS           // 5
 	TRANSFER_ERROR              // 6
 	TRANFER_PRECOMPLETED        // 7
+	TRANFER_FILE_CLOSED         // 8
 )
 
+// States
 const (
 	TRANSFER_STATUS_IDLE     = iota // 0
 	TRANSFER_STATUS_STARTED         // 1
@@ -160,13 +162,16 @@ func (session *session) startTransfer(irc *irc.Conn) {
 	}
 
 	if oldSize < packData.Size && oldSize != 0 {
+		transferData.isResume = true
 		// ddc resume
 		irc.Ctcp(packData.BotNick, "DCC RESUME "+" \""+packData.FileName+"\" "+" "+strconv.Itoa(transferData.targetPort)+" "+strconv.Itoa(oldSize))
 		session.sendEvent(TRANSFER_RESUME)
-		// fix instead of sleep wait for the ACCEPT message
-		// ACCEPT "[SUBSPLEASE] KOORI ZOKUSEI DANSHI TO COOL NA DOURYOU JOSHI - 05 (1080P)" 12354 473794808
-		// Method, "name", port, new start position
+		// TODO fix instead of sleep wait for the ACCEPT message
+		// TODO ACCEPT "[SUBSPLEASE] KOORI ZOKUSEI DANSHI TO COOL NA DOURYOU JOSHI - 05 (1080P)" 12354 473794808
+		// TODO Method, "name", port, new start position
 		time.Sleep(5 * time.Second)
+	} else {
+		transferData.isResume = false
 	}
 
 	file, err := os.OpenFile(newFileDir, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0777)
@@ -261,6 +266,7 @@ func (session *session) startTransfer(irc *irc.Conn) {
 				log.Debugf("Done Transfer for %s", packData.FileName)
 				os.Rename(newFileDir, packData.GetFileDir())
 				log.Debugf("Renamed file from %s to %s", newFileDir, packData.GetFileDir())
+				session.sendEvent(TRANFER_FILE_CLOSED)
 				return
 			}
 		}
@@ -277,6 +283,7 @@ func endTransfer(writer *bufio.Writer, conn net.Conn, file *os.File, transferDat
 
 	// Extra sleep to ensure that any sendEvent() calls have been processed
 	time.Sleep(200 * time.Millisecond)
+
 }
 
 func (session *session) stopTranferConditions() bool {
@@ -359,7 +366,7 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 	select {
 	case <-finishConnect:
 		break
-	case <-time.After(10 * time.Second):
+	case <-time.After(30 * time.Second):
 		if retries >= 3 {
 			log.Fatalf("Connection error: %s\n", "maximum number of retries reached for IRC network connection")
 		}
@@ -469,7 +476,7 @@ func createIrcClient() (*irc.Conn, chan bool) {
 	}
 
 	cfg.Me.Name = randName(8)
-	cfg.Me.Ident = randName(6)
+	cfg.Me.Ident = "go-xdcc"
 	c := irc.Client(cfg)
 
 	log.Infof("Using | Nick %s | Name %s | Ident %s", c.Me().Nick, c.Me().Name, c.Me().Ident)
@@ -487,6 +494,18 @@ func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit cha
 		})
 
 	c.HandleFunc(irc.CTCP,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+
+	c.HandleFunc(irc.ACTION,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+
+	c.HandleFunc(irc.KICK,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+
+	c.HandleFunc(irc.QUIT,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+
+	c.HandleFunc(irc.REGISTER,
 		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
 
 	c.HandleFunc(irc.PRIVMSG,
@@ -514,7 +533,7 @@ func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit cha
 	c.HandleFunc(irc.ERROR,
 		func(conn *irc.Conn, line *irc.Line) {
 			log.Error("Error in IRC Client: " + line.Text())
-			// conn.Close()
+			//// conn.Close()
 		})
 
 	c.HandleFunc(irc.CTCP,
@@ -522,8 +541,8 @@ func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit cha
 			text := l.Text()
 			textLower := strings.ToLower(text)
 			arg0 := strings.SplitN(textLower, " ", 2)[0]
-			// "ACCEPT \"[HORRIBLESUBS] DR. STONE - 21 [1080P].MKV\" 41335 786432000"
-			// Should followup after this send handle to begin the transfer
+			// TODO "ACCEPT \"[HORRIBLESUBS] DR. STONE - 21 [1080P].MKV\" 41335 786432000"
+			// TODO Should followup after this send handle to begin the transfer
 			if strings.EqualFold(arg0, "send") {
 				log.Info("CTCP: " + text)
 
@@ -549,7 +568,7 @@ func getFileSize(f string) (int, error) {
 	fileStub, _ := os.OpenFile(f, os.O_APPEND|os.O_CREATE, 0777)
 	fileStub.Close()
 
-	// Fast/Usually accurate
+	// ?Fast/Usually accurate
 	/*
 		g, err := os.Stat(f)
 
@@ -561,7 +580,7 @@ func getFileSize(f string) (int, error) {
 		return int(g.Size()), nil
 	*/
 
-	// Slow/Always accurate
+	// *Slow/Always accurate | High Memory
 	/*
 		data, err := os.ReadFile(f)
 		if err != nil {
@@ -670,6 +689,7 @@ func QueueLoop() {
 		monitor := v.monitor
 		job := <-jobs
 
+		pack := job.packData
 		tracker := monitor.Add(job.packData.FileName, job.packData.Size)
 		tracker.Total = int64(job.packData.Size - job.transferData.startBytes)
 
@@ -685,19 +705,18 @@ func QueueLoop() {
 
 					if status == TRANSFER_FINISH || status == TRANSFER_CANCEL {
 						tracker.SetValue(int64(transfer.transferedBytes))
-
-						removeFinishedPack(job.packData)
-
+						removeFinishedPack(pack)
 						counter.dec()
-						return
-
+						if status == TRANSFER_CANCEL {
+							return
+						}
 					} else if status == TRANSFER_PROGRESS {
 						tracker.SetValue(int64(transfer.transferedBytes - transfer.startBytes))
 						progress <- true
 
 					} else if status == TRANSFER_RESUME {
 						tracker.UpdateMessage(cRed + "[Resuming] " + cBlue + tracker.Message)
-						tracker.UpdateTotal(int64(job.packData.Size - transfer.startBytes))
+						tracker.UpdateTotal(int64(pack.Size - transfer.startBytes))
 						tracker.SetValue(int64(transfer.transferedBytes - transfer.startBytes))
 
 					} else if status == TRANFER_PRECOMPLETED {
@@ -713,9 +732,40 @@ func QueueLoop() {
 						counter.dec()
 
 						// Keep track of retries + add retry flag/event
-						removeFinishedPack(job.packData)
-						QueuePack(job.packData, monitor)
+						removeFinishedPack(pack)
+						QueuePack(pack, monitor)
 
+						return
+					} else if status == TRANFER_FILE_CLOSED && pack.Crc32 != "" {
+						if !((config.CrcCheck == "resume" && transfer.isResume) ||
+							config.CrcCheck == "always") {
+							return
+						}
+
+						bytes, err := os.ReadFile(pack.GetFileDir())
+
+						if err != nil {
+							log.Errorf("Cannot read file to complete CRC check for %s, %s", pack.FileName, err)
+							return
+						}
+						crc32 := fmt.Sprintf("%08X", crc32.ChecksumIEEE(bytes))
+
+						if pack.Crc32 != crc32 {
+							log.Errorf("CRC32 Checksum mismatch for %s, expected %s got %s", pack.FileName, pack.Crc32, crc32)
+							err := os.Remove(pack.GetFileDir())
+
+							if err != nil {
+								log.Errorf("Cannot remove invalid file %s, %s", pack.GetFileDir(), err)
+								return
+							}
+
+							go func() {
+								time.Sleep(180 * time.Second)
+								QueuePack(pack, monitor)
+							}()
+							return
+						}
+						log.Debugf("CRC32 Checksum match for %s, expected %s got %s", pack.FileName, pack.Crc32, crc32)
 						return
 					}
 				}

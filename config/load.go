@@ -18,6 +18,7 @@ type Config struct {
 	DownloadDir      string    `yaml:"downloadDir"`
 	BoundIp          string    `yaml:"boundIp"`
 	DownloadInterval int       `yaml:"downloadInterval"`
+	CrcCheck         string    `yaml:"crcCheck"` // "resume", "always"
 	IRC              ircConfig `yaml:"irc"`
 	Trackers         []Tracker
 }

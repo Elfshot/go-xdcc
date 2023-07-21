@@ -18,15 +18,17 @@ var (
 	flagShowSpeed          = flag.Bool("show-speed", true, "Show the tracker speed?")
 	flagShowSpeedOverall   = flag.Bool("show-speed-overall", true, "Show the overall tracker speed?")
 
-	// messageColors = []text.Color{
-	// 	text.FgRed,
-	// 	text.FgGreen,
-	// 	text.FgYellow,
-	// 	text.FgBlue,
-	// 	text.FgMagenta,
-	// 	text.FgCyan,
-	// 	text.FgWhite,
-	// }
+	/*
+		messageColors = []text.Color{
+			text.FgRed,
+			text.FgGreen,
+			text.FgYellow,
+			text.FgBlue,
+			text.FgMagenta,
+			text.FgCyan,
+			text.FgWhite,
+		}
+	*/
 )
 
 type Monitor struct {
@@ -64,7 +66,7 @@ func (monitor *Monitor) Init() {
 	pw.Style().Visibility.Time = !*flagHideTime
 	pw.Style().Visibility.TrackerOverall = !*flagHideOverallTracker
 	pw.Style().Visibility.Value = !*flagHideValue
-	// pw.writer.SetPinnedMessages("Downloading Your Anime!")
+	//// pw.writer.SetPinnedMessages("Downloading Your Anime!")
 
 	monitor.writer = pw
 	go monitor.writer.Render()

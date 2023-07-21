@@ -4,6 +4,7 @@ preferedFormat: "1080p" # 1080p, 720p, 480p
 downloadDir: "./downloads" # (Leave as-is for docker instances) Directory to download to
 #boundIp: "000.000.000.000" # (Optional [auto-binds to first available IP]) IP to bind to for DCC TCP connections
 downloadInterval: 30 # Time in minutes between searching for new downloads
+crcCheck: always # Options: always, resume | Leave blank ("") or don't include line for never
 
 irc:
   server: "irc.rizon.net"

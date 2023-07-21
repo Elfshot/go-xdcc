@@ -9,6 +9,8 @@ import (
 	"github.com/Elfshot/go-xdcc/progress"
 	"github.com/Elfshot/go-xdcc/trackers"
 	"github.com/spf13/cobra"
+
+	log "github.com/sirupsen/logrus"
 )
 
 func runXdcc() *progress.Monitor {
@@ -33,6 +35,7 @@ var trackerCmd = &cobra.Command{
 	Use:   "tracker",
 	Short: "Run the tracker",
 	Run: func(cmd *cobra.Command, args []string) {
+		log.Info("Starting tracker...")
 		runTracker()
 	},
 }

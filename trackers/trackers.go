@@ -65,6 +65,7 @@ func runTrackers(pw *progress.Monitor) {
 				Season:      tracker.Season,
 				Episode:     pack.EpisodeNumber,
 				PackNumber:  pack.Id,
+				Crc32:       pack.Crc32,
 			}
 
 			// Only download if the file doesn't already exist
