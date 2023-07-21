@@ -725,18 +725,14 @@ func QueueLoop() {
 
 						return
 					} else if status == TRANFER_FILE_CLOSED && pack.Crc32 != "" {
-						file, err := os.OpenFile(pack.GetFileDir(), os.O_RDONLY, 0777)
-
-						if err != nil {
-							log.Errorf("Cannot open file to complete CRC check for %s, %s", pack.FileName, err)
+						if !((config.CrcCheck == "resume" && transfer.isResume) ||
+							config.CrcCheck == "always") {
 							return
 						}
 
-						bytes := make([]byte, pack.Size)
-						n, err := file.Read(bytes)
-						file.Close()
+						bytes, err := os.ReadFile(pack.GetFileDir())
 
-						if err != nil || n != pack.Size {
+						if err != nil {
 							log.Errorf("Cannot read file to complete CRC check for %s, %s", pack.FileName, err)
 							return
 						}
@@ -755,6 +751,7 @@ func QueueLoop() {
 								time.Sleep(180 * time.Second)
 								QueuePack(pack, monitor)
 							}()
+							return
 						}
 						log.Debugf("CRC32 Checksum match for %s, expected %s got %s", pack.FileName, pack.Crc32, crc32)
 						return

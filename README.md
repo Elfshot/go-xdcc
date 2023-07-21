@@ -1,8 +1,10 @@
 # go-xdcc
+
 Use the XDCC protocol to download, organize, and track anime using an IRC client.
 
 
 ## 🪛 Installation
+
 Ensure that the requsite directories exist and are writable by the user running the application.
 
 ```bash
@@ -18,11 +20,12 @@ chmod 766 -R config && chmod 766 downloads
 
 docker-compose up -d
 ```
-> Note: The above commands assume that the application is running as user 1000:1000.
 
+> Note: The above commands assume that the application is running as user 1000:1000.
 > ⚠️ An appropriate config.yaml file must be created in the config directory.
 
 ## ⚙️ Example config.yaml
+
 ```yaml
 maxDownloads: 3 # Max number of downloads at once- 3 is the recommended max
 preferedBots: ["Ghouls|Arutha", "ARUTHA-BATCH|1080p", "ARUTHA-BATCH|720p", "CR-HOLLAND|NEW", "CR-ARUTHA|NEW"] # List of bots to prefer | This order is the order in which packs will be sourced from
@@ -30,6 +33,7 @@ preferedFormat: "1080p" # 1080p, 720p, 480p
 downloadDir: "./downloads" # (Leave as-is for docker instances) Directory to download to
 #boundIp: "000.000.000.000" # (Optional [auto-binds to first available IP]) IP to bind to for DCC TCP connections
 downloadInterval: 30 # Time in minutes between searching for new downloads
+crcCheck: always # Options: always, resume 
 
 irc:
   server: "irc.rizon.net"
@@ -39,9 +43,11 @@ irc:
   maxWaitIrcCycles: 25 # Max number of irc cycles to wait for a download to start before erroring
   maxTcpIdleTime: 60 # Maximum number of seconds for a TCP connection to idle before aborting a transfer
 ```
+
 [NIBL Bots](https://nibl.co.uk/bots) should be used to find the prefered bots. The names should be copied over exactly.
 
 ## 🔍 Example tracker config
+
 Tracker config files must be placed in the config/trackers directory.
 
 ```yaml
@@ -64,8 +70,8 @@ episodeRange: [ 1,24 ]
 
 - Any tracker files in the subdirectories of config/trackers will be ignored.
 
-
 ## 🐳 Example docker-compose.yaml
+
 ```yaml
 version: "3.5"
 services:
@@ -97,4 +103,5 @@ services:
       timeout: 4s
       retries: 2
 ```
+
 > Note: The health check is not required, but is recommended to ensure that the application is running correctly. Use in combination with [docker-autoheal](https://github.com/willfarrell/docker-autoheal) to automatically restart the container if it fails.
