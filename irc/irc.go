@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"hash/crc32"
+	"math"
 	"math/rand"
 	"net"
 	"os"
@@ -366,7 +367,7 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 	select {
 	case <-finishConnect:
 		break
-	case <-time.After(30 * time.Second):
+	case <-time.After(time.Duration(30*math.Pow(2.17, float64(retries))) * time.Second):
 		if retries >= 3 {
 			log.Fatalf("Connection error: %s\n", "maximum number of retries reached for IRC network connection")
 		}
