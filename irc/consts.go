@@ -23,7 +23,6 @@ const (
 	TRANSFER_STATUS_ERROR           // 5
 )
 
-const randomChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 const cRed = "\033[31m"
 const cBlue = "\033[34m"
 

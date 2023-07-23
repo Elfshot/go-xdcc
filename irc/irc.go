@@ -5,19 +5,18 @@ import (
 	"fmt"
 	"hash/crc32"
 	"math"
-	"net"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/Elfshot/go-xdcc/config"
+	"github.com/Elfshot/go-xdcc/util"
 
 	irc "github.com/fluffle/goirc/client"
 	log "github.com/sirupsen/logrus"
 )
 
-var boundIp net.IP
 var ircClient *irc.Conn = nil
 
 func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) {
@@ -78,18 +77,18 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 func createIrcClient() (*irc.Conn, chan bool) {
 	mainConf := config.GetConfig()
 	serverName := mainConf.IRC.Server
-	cfg := irc.NewConfig(randStr(12))
+	cfg := irc.NewConfig(util.RandStr(12))
 	cfg.SSL = true
 	cfg.SSLConfig = &tls.Config{ServerName: serverName}
 	cfg.Server = serverName + ":" + strconv.Itoa(mainConf.IRC.ServerPort)
 
 	if len(mainConf.IRC.NickName) == 0 {
-		cfg.NewNick = func(n string) string { return randStr(16) }
+		cfg.NewNick = func(n string) string { return util.RandStr(16) }
 	} else {
 		cfg.NewNick = func(n string) string { return mainConf.IRC.NickName }
 	}
 
-	cfg.Me.Name = randStr(8)
+	cfg.Me.Name = util.RandStr(8)
 	cfg.Me.Ident = "go-xdcc"
 	c := irc.Client(cfg)
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Elfshot/go-xdcc/config"
+	"github.com/Elfshot/go-xdcc/util"
 	irc "github.com/fluffle/goirc/client"
 	log "github.com/sirupsen/logrus"
 )
@@ -48,7 +49,7 @@ func (session *session) startTransfer(irc *irc.Conn) {
 
 	newFileDir := packData.GetFileDir() + ".part"
 
-	oldSize, err := getFileSize(newFileDir)
+	oldSize, err := util.GetFileSize(newFileDir)
 	if err != nil {
 		session.sendEvent(TRANSFER_ERROR)
 		log.Error(err)
@@ -57,7 +58,7 @@ func (session *session) startTransfer(irc *irc.Conn) {
 	transferData.transferedBytes, transferData.startBytes = oldSize, oldSize
 
 	if oldSize >= packData.Size {
-		voidTcpConn(transferData.targetIp, transferData.targetPort)
+		util.VoidTcpConn(transferData.targetIp, transferData.targetPort)
 		session.sendEvent(TRANFER_PRECOMPLETED)
 		log.Debug("Already downloaded")
 		return
@@ -85,7 +86,7 @@ func (session *session) startTransfer(irc *irc.Conn) {
 
 	writer := bufio.NewWriterSize(file, bufferSize)
 
-	conn, err := openTcpConn(transferData.targetIp, transferData.targetPort)
+	conn, err := util.OpenTcpConn(transferData.targetIp, transferData.targetPort)
 
 	if err != nil {
 		session.sendEvent(TRANSFER_ERROR)
@@ -207,7 +208,7 @@ func parseCtcpString(ctcpRes *irc.Line) (*session, error) {
 		log.Error(err)
 		return nil, err
 	}
-	transferStub.targetIp = uint32ToIP(targetIp)
+	transferStub.targetIp = util.Uint32ToIP(targetIp)
 
 	targetPort, err := strconv.Atoi(fields[len(fields)-2])
 	if err != nil {
