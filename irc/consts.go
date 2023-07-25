@@ -27,4 +27,4 @@ const cRed = "\033[31m"
 const cBlue = "\033[34m"
 
 // 50MB buffer | Low values create too many write calls | High values create too much memory usage
-const bufferSize = 1024 * 1024 * 50
+const bufferSize = 1024 * 1024 * 8

@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/Elfshot/go-xdcc/config"
@@ -23,7 +24,8 @@ type PackScheme struct {
 	Sizekbits     int    `json:"sizekbits"`
 
 	// *Not always given
-	Crc32 string `json:"-"`
+	Crc32   string `json:"-"`
+	Version int    `json:"-"`
 	//// Number        int    `json:"number"`
 }
 
@@ -123,22 +125,47 @@ func GetSeriesPacks(series string) ([]PackScheme, error) {
 			}
 
 			name := formatString(names[2])
-			crc32 := crcRegexp.FindStringSubmatch(pack.Name)[1]
+
+			if len(names) >= 5 {
+				if ver := names[4]; ver != "" {
+					ver, err := strconv.Atoi(strings.Split(ver, "v")[1])
+					if err == nil {
+						pack.Version = ver
+					}
+				} else {
+					pack.Version = 1
+				}
+			}
+
+			crc32 := ""
+			if crcR := crcRegexp.FindStringSubmatch(pack.Name); len(crcR) > 0 {
+				crc32 = crcR[1]
+			}
+
 			if len(crc32) > 0 {
 				pack.Crc32 = crc32
 			}
 
 			inArrI, arrPack := findInPacks(packs, pack.EpisodeNumber)
+
+			// If pack already in array, check if we have a newer version or have a more prefered bot
+			// Newer version is prioritized over prefered bot
 			if inArrI >= 0 {
-				if getBotIdPrefPos(arrPack.BotId) < getBotIdPrefPos(pack.BotId) {
+				if arrPack.Version < pack.Version {
 					packs[inArrI] = pack
 					continue
-				} else {
+				} else if arrPack.Version > pack.Version {
 					continue
 				}
-			}
 
-			if strings.EqualFold(name, series) {
+				pefInArr := getBotIdPrefPos(arrPack.BotId)
+				prefNew := getBotIdPrefPos(pack.BotId)
+
+				if (pefInArr < 0) || ((prefNew > 0) && (prefNew < pefInArr)) {
+					packs[inArrI] = pack
+					continue
+				}
+			} else if strings.EqualFold(name, series) {
 				packs = append(packs, pack)
 				continue
 			}

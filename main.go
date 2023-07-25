@@ -33,4 +33,5 @@ sometimes downloads stall. auto restart them
 "You already requested that pack"
 Apply config defaults
 force http to use specified laddr too -> https://stackoverflow.com/questions/50870994/use-dial-in-golang-with-specific-local-address
+replace the sketchky progress checker with one that watches the progress package's progress in a goroutine
 */
