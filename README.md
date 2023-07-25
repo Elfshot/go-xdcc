@@ -2,7 +2,6 @@
 
 Use the XDCC protocol to download, organize, and track anime using an IRC client.
 
-
 ## 🪛 Installation
 
 Ensure that the requsite directories exist and are writable by the user running the application.

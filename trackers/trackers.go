@@ -50,22 +50,26 @@ func runTrackers(pw *progress.Monitor) {
 			}
 
 			botN, err := search.GetBotName(pack.BotId)
-
 			if err != nil {
-				log.Error(err)
 				continue
 			}
 
 			var sPack *irc.Pack = &irc.Pack{
 				BotNick:     botN,
 				FileName:    pack.Name,
-				ModFileName: fmt.Sprintf("S%dE%d.mkv", tracker.Season, newEp),
+				ModFileName: fmt.Sprintf("S%dE%d", tracker.Season, newEp),
 				Size:        0,
 				ShowName:    tracker.FileName,
 				Season:      tracker.Season,
 				Episode:     pack.EpisodeNumber,
 				PackNumber:  pack.Id,
 				Crc32:       pack.Crc32,
+				Version:     pack.Version,
+			}
+
+			// Delete old versions of the file if they exist
+			if pack.Version > 1 {
+				sPack.DelOldVersions()
 			}
 
 			// Only download if the file doesn't already exist
