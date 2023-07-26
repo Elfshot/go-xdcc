@@ -81,7 +81,7 @@ func runTrackers(pw *progress.Monitor) {
 			irc.QueuePack(sPack, pw)
 		}
 	}
-	if failures >= len(trackers)/2 {
+	if failures > len(trackers)/2 {
 		log.Fatal("Too many tracker failures in getting packs. Exiting...")
 	}
 }
