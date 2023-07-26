@@ -102,33 +102,33 @@ func createIrcClient() (*irc.Conn, chan bool) {
 func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit chan bool) {
 	c.HandleFunc(irc.CONNECTED,
 		func(conn *irc.Conn, line *irc.Line) {
-			log.Debug(line.Text())
+			log.Debug(line.Raw)
 			conn.Join(config.GetConfig().IRC.ChannelName)
 		})
 
 	c.HandleFunc(irc.CTCP,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
 
 	c.HandleFunc(irc.ACTION,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
 
 	c.HandleFunc(irc.KICK,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
 
 	c.HandleFunc(irc.QUIT,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
 
 	c.HandleFunc(irc.REGISTER,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
 
 	c.HandleFunc(irc.PRIVMSG,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
 
 	c.HandleFunc(irc.CTCPREPLY,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
 
 	c.HandleFunc(irc.NOTICE,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Text()) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
 
 	c.HandleFunc(irc.JOIN,
 		func(conn *irc.Conn, line *irc.Line) {
