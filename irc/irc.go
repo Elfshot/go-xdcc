@@ -102,36 +102,61 @@ func createIrcClient() (*irc.Conn, chan bool) {
 func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit chan bool) {
 	c.HandleFunc(irc.CONNECTED,
 		func(conn *irc.Conn, line *irc.Line) {
-			log.Debug(line.Raw)
+			log.Debug("irc.CONNECTED: " + line.Raw)
 			conn.Join(config.GetConfig().IRC.ChannelName)
 		})
 
-	c.HandleFunc(irc.CTCP,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
-
 	c.HandleFunc(irc.ACTION,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.ACTION: " + line.Raw) })
 
 	c.HandleFunc(irc.KICK,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.KICK: " + line.Raw) })
 
 	c.HandleFunc(irc.QUIT,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.QUIT: " + line.Raw) })
 
 	c.HandleFunc(irc.REGISTER,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.REGISTER: " + line.Raw) })
 
 	c.HandleFunc(irc.PRIVMSG,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.PRIVMSG: " + line.Raw) })
 
 	c.HandleFunc(irc.CTCPREPLY,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.CTCPREPLY: " + line.Raw) })
 
 	c.HandleFunc(irc.NOTICE,
-		func(conn *irc.Conn, line *irc.Line) { log.Debug(line.Raw) })
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.NOTICE: " + line.Raw) })
+
+	c.HandleFunc(irc.AUTHENTICATE,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.AUTHENTICATE: " + line.Raw) })
+
+	c.HandleFunc(irc.INVITE,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.INVITE: " + line.Raw) })
+
+	c.HandleFunc(irc.PING,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.PING: " + line.Raw) })
+
+	c.HandleFunc(irc.PONG,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.PONG: " + line.Raw) })
+
+	c.HandleFunc(irc.PASS,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.PASS: " + line.Raw) })
+
+	c.HandleFunc(irc.TOPIC,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.TOPIC: " + line.Raw) })
+
+	c.HandleFunc(irc.USER,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.USER: " + line.Raw) })
+
+	c.HandleFunc(irc.WHO,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.WHO: " + line.Raw) })
+
+	c.HandleFunc(irc.WHOIS,
+		func(conn *irc.Conn, line *irc.Line) { log.Debug("irc.WHOIS: " + line.Raw) })
 
 	c.HandleFunc(irc.JOIN,
 		func(conn *irc.Conn, line *irc.Line) {
+			log.Debug("irc.JOIN: " + line.Raw)
 			if line.Nick == c.Me().Nick {
 				log.Info("Connected to Channel")
 				ready <- true
@@ -140,7 +165,11 @@ func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit cha
 
 	c.HandleFunc(irc.DISCONNECTED,
 		func(conn *irc.Conn, line *irc.Line) {
-			conn.Close()
+			log.Debug("irc.DISCONNECTED: " + line.Raw)
+			if line.Nick == c.Me().Nick {
+				log.Info("Disconnected from Channel")
+				conn.Close()
+			}
 		})
 
 	c.HandleFunc(irc.ERROR,
@@ -151,14 +180,13 @@ func registerHandlers(c *irc.Conn, jobs chan *session, ready chan bool, quit cha
 
 	c.HandleFunc(irc.CTCP,
 		func(c *irc.Conn, l *irc.Line) {
+			log.Debug("irc.CTCP: " + l.Raw)
 			text := l.Text()
 			textLower := strings.ToLower(text)
 			arg0 := strings.SplitN(textLower, " ", 2)[0]
 			// TODO "ACCEPT \"[HORRIBLESUBS] DR. STONE - 21 [1080P].MKV\" 41335 786432000"
 			// TODO Should followup after this send handle to begin the transfer
 			if strings.EqualFold(arg0, "send") {
-				log.Info("CTCP: " + text)
-
 				session, err := parseCtcpString(l)
 				if err != nil {
 					log.Error(err)
