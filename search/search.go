@@ -146,6 +146,16 @@ func GetSeriesPacks(series string) ([]PackScheme, error) {
 				pack.Crc32 = crc32
 			}
 
+			if (pack.EpisodeNumber <= 0) && (len(names[3]) > 0) {
+				epInt, err := strconv.Atoi(names[3])
+
+				if err != nil {
+					continue
+				}
+
+				pack.EpisodeNumber = epInt
+			}
+
 			inArrI, arrPack := findInPacks(packs, pack.EpisodeNumber)
 
 			// If pack already in array, check if we have a newer version or have a more prefered bot
