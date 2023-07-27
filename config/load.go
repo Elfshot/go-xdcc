@@ -38,6 +38,7 @@ type Tracker struct {
 	FileName     string `yaml:"fileName"`
 	Season       int    `yaml:"season"`
 	EpisodeRange [2]int `yaml:"episodeRange"`
+	NoRangeShift bool   `yaml:"noRangeShift"`
 }
 
 // Load yaml config file "./config.yaml" into Config struct and return it

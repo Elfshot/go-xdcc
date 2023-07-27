@@ -56,12 +56,21 @@ season: 1
 episodeRange: [ 1,24 ]
 ```
 
+```yaml
+searchName: One Piece
+fileName: One Piece
+season: 1
+episodeRange: [ 1024,1500 ]
+noRangeShift: true
+```
+
 | Parameter | Usage |
 | ------- | ------- |
 | searchName | The name to search for. Should be as appears on NIBL |
 | fileName | The name to use for the downloaded anime's folder |
 | season | The season number |
-| episodeRange | The range of episodes to download. These values are inclusive |
+| episodeRange | The range of episodes to download. These values are inclusive and absolute values will be shifted such that the first number in the range is episode 1 of the season |
+| noRangeShift | If true, the episode range will not be shifted to start at episode 1 of the season. Use this to simply download a select range of episodes of an anime |
 
 - [TheTVDB](https://thetvdb.com/) should be used to determine the season number, episode ranges, and file name.
 

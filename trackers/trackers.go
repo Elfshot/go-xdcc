@@ -41,7 +41,8 @@ func runTrackers(pw *progress.Monitor) {
 			}
 			var newEp int
 			// if the episode number is greater than the number of episodes in the season
-			if pack.EpisodeNumber > (tracker.EpisodeRange[1] - tracker.EpisodeRange[0]) {
+			if (pack.EpisodeNumber > (tracker.EpisodeRange[1] - tracker.EpisodeRange[0])) &&
+				!tracker.NoRangeShift {
 				// subtract the lower bound of the episode range from the episode number
 				// (-1 because the episode range is 1-indexed)
 				newEp = pack.EpisodeNumber - (tracker.EpisodeRange[0] - 1)
