@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"runtime/debug"
 
 	cmd "github.com/Elfshot/go-xdcc/cmd"
 	log "github.com/sirupsen/logrus"
@@ -20,7 +21,12 @@ func initLog() {
 	}
 }
 
+func setRtOps() {
+	debug.SetGCPercent(20)
+}
+
 func main() {
+	setRtOps()
 	initLog()
 
 	cmd.Execute()

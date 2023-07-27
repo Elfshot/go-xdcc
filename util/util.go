@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"runtime"
 
 	"github.com/Elfshot/go-xdcc/config"
 	log "github.com/sirupsen/logrus"
@@ -115,5 +116,10 @@ func GetFileSize(f string) (int, error) {
 		log.Error(err)
 		return 0, errors.New("error reading file")
 	}
+	RunGC()
 	return len(data), nil
+}
+
+func RunGC() {
+	runtime.GC()
 }
