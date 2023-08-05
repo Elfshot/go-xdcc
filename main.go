@@ -14,10 +14,10 @@ func initLog() {
 	switch logLevel {
 	case "DEBUG":
 		log.SetLevel(log.DebugLevel)
-	case "INFO":
-		log.SetLevel(log.InfoLevel)
-	default:
+	case "ERROR":
 		log.SetLevel(log.ErrorLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
 	}
 }
 

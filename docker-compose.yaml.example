@@ -18,7 +18,7 @@ services:
       - ./downloads:/xdcc/downloads:rw
     restart: unless-stopped
     environment:
-      - LOG_LEVEL=INFO #DEBUG, INFO, ERROR (Default)
+      - LOG_LEVEL=INFO #DEBUG, INFO (Default), ERROR
     tty: true
     stdin_open: true
     healthcheck:

@@ -32,7 +32,8 @@ preferedFormat: "1080p" # 1080p, 720p, 480p
 downloadDir: "./downloads" # (Leave as-is for docker instances) Directory to download to
 #boundIp: "000.000.000.000" # (Optional [auto-binds to first available IP]) IP to bind to for DCC TCP connections
 downloadInterval: 30 # Time in minutes between searching for new downloads
-crcCheck: always # Options: always, resume 
+crcCheck: always # Options: always, resume | Leave blank ("") or don't include line for never
+bufferSizeMB: 2 # 2MB byte buffers | lower = more cpu usage & time, higher = more ram usage
 
 irc:
   server: "irc.rizon.net"
@@ -101,7 +102,7 @@ services:
       - ./downloads:/xdcc/downloads:rw
     restart: unless-stopped
     environment:
-      - LOG_LEVEL=INFO #DEBUG, INFO, ERROR (Default)
+      - LOG_LEVEL=INFO #DEBUG, INFO (Default), ERROR
     tty: true
     stdin_open: true
     healthcheck:
