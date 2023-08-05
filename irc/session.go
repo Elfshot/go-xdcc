@@ -57,14 +57,23 @@ func (session *session) startTransfer(irc *irc.Conn) {
 		log.Error(err)
 		return
 	}
-	transferData.transferedBytes, transferData.startBytes = oldSize, oldSize
 
+	// TODO CRC if = rather than >
 	if oldSize >= packData.Size {
-		util.VoidTcpConn(transferData.targetIp, transferData.targetPort)
-		session.sendEvent(TRANFER_PRECOMPLETED)
-		log.Debug("Already downloaded")
-		return
+		log.Errorf("File %s already fully+ downloaded as part but likely corrupt. Redownloading...", packData.FileName)
+
+		err := os.Remove(newFileDir)
+		if err != nil {
+			session.sendEvent(TRANSFER_ERROR)
+			log.Errorf("Cannot remove file %s, %s", packData.FileName, err)
+			util.VoidTcpConn(transferData.targetIp, transferData.targetPort)
+			return
+		}
+
+		oldSize = 0
 	}
+
+	transferData.transferedBytes, transferData.startBytes = oldSize, oldSize
 
 	if oldSize < packData.Size && oldSize != 0 {
 		transferData.isResume = true
