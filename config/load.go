@@ -12,15 +12,17 @@ var gConfig *Config
 
 // Create a config struct to hold the config data
 type Config struct {
-	PreferedBots     []string  `yaml:"preferedBots"`
-	MaxDownloads     int       `yaml:"maxDownloads"`
-	PreferedFormat   string    `yaml:"preferedFormat"`
-	DownloadDir      string    `yaml:"downloadDir"`
-	BoundIp          string    `yaml:"boundIp"`
-	DownloadInterval int       `yaml:"downloadInterval"`
-	CrcCheck         string    `yaml:"crcCheck"` // "resume", "always"
-	IRC              ircConfig `yaml:"irc"`
-	Trackers         []Tracker
+	PreferedBots     []string `yaml:"preferedBots"`
+	MaxDownloads     int      `yaml:"maxDownloads"`
+	PreferedFormat   string   `yaml:"preferedFormat"`
+	DownloadDir      string   `yaml:"downloadDir"`
+	BoundIp          string   `yaml:"boundIp"`
+	DownloadInterval int      `yaml:"downloadInterval"`
+	CrcCheck         string   `yaml:"crcCheck"` // "resume", "always"
+	BufferSizeMB     int      `yaml:"bufferSizeMB"`
+
+	IRC      ircConfig `yaml:"irc"`
+	Trackers []Tracker
 }
 
 type ircConfig struct {

@@ -14,6 +14,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+var bufferSize = config.GetConfig().BufferSizeMB * 1024 * 1024
+
 type session struct {
 	packData     *Pack
 	transferData *transfer
@@ -153,8 +155,6 @@ func (session *session) startTransfer(irc *irc.Conn) {
 				inQuit <- true
 				return
 			}
-
-			buffer = make([]byte, bufferSize)
 
 			transferData.transferedBytes += bytesRead
 

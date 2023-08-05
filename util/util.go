@@ -2,6 +2,8 @@ package util
 
 import (
 	"errors"
+	"fmt"
+	"hash/crc32"
 	"math/rand"
 	"net"
 	"os"
@@ -116,10 +118,46 @@ func GetFileSize(f string) (int, error) {
 		log.Error(err)
 		return 0, errors.New("error reading file")
 	}
+
+	r := len(data)
 	RunGC()
-	return len(data), nil
+
+	return r, nil
 }
 
 func RunGC() {
 	runtime.GC()
+}
+
+func GetCrc32(fileName string) (string, error) {
+	bSize := config.GetConfig().BufferSizeMB * 1024 * 1024
+
+	file, err := os.Open(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	buffer := make([]byte, bSize)
+	hash := crc32.NewIEEE()
+
+	var gg error = nil
+
+	for gg == nil {
+		var n int
+		n, gg = file.Read(buffer)
+
+		// truncate the buffer to the actual data read if necessary
+		if n < bSize {
+			buffer = buffer[:n]
+		}
+
+		hash.Write(buffer)
+	}
+
+	// get the checksum
+	checksum := fmt.Sprintf("%X", hash.Sum32())
+
+	RunGC()
+	return checksum, nil
 }

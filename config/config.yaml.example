@@ -5,6 +5,7 @@ downloadDir: "./downloads" # (Leave as-is for docker instances) Directory to dow
 #boundIp: "000.000.000.000" # (Optional [auto-binds to first available IP]) IP to bind to for DCC TCP connections
 downloadInterval: 30 # Time in minutes between searching for new downloads
 crcCheck: always # Options: always, resume | Leave blank ("") or don't include line for never
+bufferSizeMB: 10 # 10MB | lower = more cpu usage & time, higher = more ram usage
 
 irc:
   server: "irc.rizon.net"

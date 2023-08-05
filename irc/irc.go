@@ -2,8 +2,6 @@ package irc
 
 import (
 	"crypto/tls"
-	"fmt"
-	"hash/crc32"
 	"math"
 	"os"
 	"strconv"
@@ -296,13 +294,12 @@ func QueueLoop() {
 							return
 						}
 
-						bytes, err := os.ReadFile(pack.GetFileDir())
+						crc32, err := util.GetCrc32(pack.GetFileDir())
 
 						if err != nil {
 							log.Errorf("Cannot read file to complete CRC check for %s, %s", pack.FileName, err)
 							return
 						}
-						crc32 := fmt.Sprintf("%08X", crc32.ChecksumIEEE(bytes))
 
 						if pack.Crc32 != crc32 {
 							log.Errorf("CRC32 Checksum mismatch for %s, expected %s got %s", pack.FileName, pack.Crc32, crc32)
