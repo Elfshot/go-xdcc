@@ -31,6 +31,10 @@ var packs = make([]*Pack, 0)
 
 func (p Pack) GetFileDir() string {
 	dir := config.GetConfig().DownloadDir
+
+	if config.GetConfig().SkipOrganization {
+		return dir + p.FileName
+	}
 	sep := string(os.PathSeparator)
 	showDir := dir + p.ShowName + sep
 	seasonDir := showDir + "Season " + fmt.Sprint(p.Season) + sep

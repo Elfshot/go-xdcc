@@ -20,6 +20,7 @@ type Config struct {
 	DownloadInterval int      `yaml:"downloadInterval"`
 	CrcCheck         string   `yaml:"crcCheck"` // "resume", "always"
 	BufferSizeMB     int      `yaml:"bufferSizeMB"`
+	SkipOrganization bool     `yaml:"skipOrganization"`
 
 	IRC      ircConfig `yaml:"irc"`
 	Trackers []Tracker
