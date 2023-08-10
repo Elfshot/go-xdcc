@@ -21,7 +21,7 @@ type PackScheme struct {
 	LastModified  string `json:"lastModified"` // yyyy-MM-dd HH:mm:ss
 	Name          string `json:"name"`
 	Size          string `json:"size"` // 1.2GB or 1.2MB or 1.2KB
-	Sizekbits     int    `json:"sizekbits"`
+	SizeBytes     int    `json:"sizekbits"`
 
 	// *Not always given
 	Crc32   string `json:"-"`

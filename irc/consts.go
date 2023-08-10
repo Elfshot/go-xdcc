@@ -25,3 +25,5 @@ const (
 
 const cRed = "\033[31m"
 const cBlue = "\033[34m"
+
+var loopStarted = false

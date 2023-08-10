@@ -247,3 +247,157 @@ func parseCtcpString(ctcpRes *irc.Line) (*session, error) {
 
 	return sessionStub, nil
 }
+
+func QueueLoop() {
+	if loopStarted {
+		return
+	} else {
+		loopStarted = true
+	}
+
+	config := config.GetConfig()
+	max_dls := config.MaxDownloads
+	closeConnMins := time.Duration(config.IRC.CloseConnectionMins)
+
+	counter := counterT{count: 0, limit: max_dls}
+	jobs := make(chan *session)
+
+	progress := make(chan bool)
+
+	go func() {
+		for {
+			timer := time.NewTimer(closeConnMins * time.Minute)
+			after := timer.C
+			select {
+			case <-progress:
+				if !timer.Stop() {
+					<-after
+				}
+				continue
+			case <-after:
+				if ircClient != nil && ircClient.Connected() {
+					log.Debugf("No progress in %d minutes, closing irc connection", closeConnMins)
+					ircClient.Close()
+					ircClient = nil
+				}
+
+				if !loopStarted {
+					return
+				}
+
+				continue
+			}
+		}
+	}()
+
+	for v := range packQueue {
+		counter.inc()
+
+		sizeFree, _, err := util.DiskUsage(config.DownloadDir)
+
+		if err != nil {
+			log.Error("Cannot get disk space: " + err.Error() + "\nSkipping pack: " + v.pack.FileName)
+			continue
+		}
+
+		if int(sizeFree) < (v.pack.Size + int(float64(v.pack.Size)*float64(0.1))) {
+			log.Errorf("Not enough space to download %s, ~%d Mb needed, %d Mb free", v.pack.FileName, v.pack.Size, sizeFree)
+			continue
+		}
+
+		quit := getPack(v.pack.BotNick, v.pack.PackNumber, jobs)
+		monitor := v.monitor
+		job := <-jobs
+
+		pack := job.packData
+		tracker := monitor.Add(job.packData.FileName, job.packData.Size)
+		tracker.Total = int64(job.packData.Size - job.transferData.startBytes)
+
+		go func() {
+			for {
+				select {
+				case <-quit:
+					counter.dec()
+					return
+				case event := <-job.transferData.events:
+					transfer := event.TransferData
+					status := event.EventType
+
+					if status == TRANSFER_FINISH || status == TRANSFER_CANCEL {
+						tracker.SetValue(int64(transfer.transferedBytes))
+						removeFinishedPack(pack)
+						counter.dec()
+						if status == TRANSFER_CANCEL {
+							return
+						}
+					} else if status == TRANSFER_PROGRESS {
+						tracker.SetValue(int64(transfer.transferedBytes - transfer.startBytes))
+						progress <- true
+
+					} else if status == TRANSFER_RESUME {
+						tracker.UpdateMessage(cRed + "[Resuming] " + cBlue + tracker.Message)
+						tracker.UpdateTotal(int64(pack.Size - transfer.startBytes))
+						tracker.SetValue(int64(transfer.transferedBytes - transfer.startBytes))
+
+					} else if status == TRANFER_PRECOMPLETED {
+						tracker.UpdateMessage(cRed + "[Already Complete!] " + cBlue + tracker.Message)
+						tracker.UpdateTotal(0)
+						tracker.MarkAsDone()
+						counter.dec()
+						return
+
+					} else if status == TRANSFER_ERROR {
+						tracker.SetValue(int64(transfer.transferedBytes))
+						tracker.MarkAsErrored()
+						counter.dec()
+
+						// Keep track of retries + add retry flag/event
+						removeFinishedPack(pack)
+						QueuePack(pack, monitor)
+
+						return
+					} else if status == TRANFER_FILE_CLOSED && pack.Crc32 != "" {
+						if !((config.CrcCheck == "resume" && transfer.isResume) ||
+							config.CrcCheck == "always") {
+							return
+						}
+
+						crc32, err := util.GetCrc32(pack.GetFileDir())
+
+						if err != nil {
+							log.Errorf("Cannot read file to complete CRC check for %s, %s", pack.FileName, err)
+							return
+						}
+
+						if pack.Crc32 != crc32 {
+							log.Errorf("CRC32 Checksum mismatch for %s, expected %s got %s", pack.FileName, pack.Crc32, crc32)
+							err := os.Remove(pack.GetFileDir())
+
+							if err != nil {
+								log.Errorf("Cannot remove invalid file %s, %s", pack.GetFileDir(), err)
+								return
+							}
+
+							go func() {
+								time.Sleep(180 * time.Second)
+								QueuePack(pack, monitor)
+							}()
+							return
+						}
+						log.Debugf("CRC32 Checksum match for %s, expected %s got %s", pack.FileName, pack.Crc32, crc32)
+						return
+					}
+				}
+			}
+
+		}()
+
+		waitIrcReady()
+		counter.wait()
+
+		time.Sleep(10 * time.Second)
+
+	}
+
+	loopStarted = false
+}

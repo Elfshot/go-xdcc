@@ -59,7 +59,7 @@ func runTrackers(pw *progress.Monitor) {
 				BotNick:     botN,
 				FileName:    pack.Name,
 				ModFileName: fmt.Sprintf("S%dE%d", tracker.Season, newEp),
-				Size:        0,
+				Size:        pack.SizeBytes,
 				ShowName:    tracker.FileName,
 				Season:      tracker.Season,
 				Episode:     pack.EpisodeNumber,
