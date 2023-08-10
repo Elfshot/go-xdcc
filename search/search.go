@@ -21,7 +21,7 @@ type PackScheme struct {
 	LastModified  string `json:"lastModified"` // yyyy-MM-dd HH:mm:ss
 	Name          string `json:"name"`
 	Size          string `json:"size"` // 1.2GB or 1.2MB or 1.2KB
-	Sizekbits     int    `json:"sizekbits"`
+	SizeBytes     int    `json:"sizekbits"`
 
 	// *Not always given
 	Crc32   string `json:"-"`
@@ -144,6 +144,16 @@ func GetSeriesPacks(series string) ([]PackScheme, error) {
 
 			if len(crc32) > 0 {
 				pack.Crc32 = crc32
+			}
+
+			if (pack.EpisodeNumber <= 0) && (len(names[3]) > 0) {
+				epInt, err := strconv.Atoi(names[3])
+
+				if err != nil {
+					continue
+				}
+
+				pack.EpisodeNumber = epInt
 			}
 
 			inArrI, arrPack := findInPacks(packs, pack.EpisodeNumber)

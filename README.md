@@ -32,7 +32,9 @@ preferedFormat: "1080p" # 1080p, 720p, 480p
 downloadDir: "./downloads" # (Leave as-is for docker instances) Directory to download to
 #boundIp: "000.000.000.000" # (Optional [auto-binds to first available IP]) IP to bind to for DCC TCP connections
 downloadInterval: 30 # Time in minutes between searching for new downloads
-crcCheck: always # Options: always, resume 
+crcCheck: always # Options: always, resume | Leave blank ("") or don't include line for never
+bufferSizeMB: 2 # 2MB byte buffers | lower = more cpu usage & time, higher = more ram usage
+skipOrganization: false # When true, will not organize files into folders and will leave them in the download directory with their original names | Negates "season", "noRangeShift", and "fileName" options in tracker configs
 
 irc:
   server: "irc.rizon.net"
@@ -56,12 +58,23 @@ season: 1
 episodeRange: [ 1,24 ]
 ```
 
+```yaml
+searchName: One Piece
+fileName: One Piece
+season: 1
+episodeRange: [ 1024,1500 ]
+noRangeShift: true
+```
+
 | Parameter | Usage |
 | ------- | ------- |
 | searchName | The name to search for. Should be as appears on NIBL |
 | fileName | The name to use for the downloaded anime's folder |
 | season | The season number |
-| episodeRange | The range of episodes to download. These values are inclusive |
+| episodeRange | The range of episodes to download. These values are inclusive and absolute values will be shifted such that the first number in the range is episode 1 of the season |
+| noRangeShift | If true, the episode range will not be shifted to start at episode 1 of the season. Use this to simply download a select range of episodes of an anime |
+
+- Note: When "skipOrganization" is true, "fileName", "season", and "noRangeShift" are ignored.
 
 - [TheTVDB](https://thetvdb.com/) should be used to determine the season number, episode ranges, and file name.
 
@@ -92,7 +105,7 @@ services:
       - ./downloads:/xdcc/downloads:rw
     restart: unless-stopped
     environment:
-      - LOG_LEVEL=INFO #DEBUG, INFO, ERROR (Default)
+      - LOG_LEVEL=INFO #DEBUG, INFO (Default), ERROR
     tty: true
     stdin_open: true
     healthcheck:

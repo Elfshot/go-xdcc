@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"runtime/debug"
 
 	cmd "github.com/Elfshot/go-xdcc/cmd"
 	log "github.com/sirupsen/logrus"
@@ -13,14 +14,19 @@ func initLog() {
 	switch logLevel {
 	case "DEBUG":
 		log.SetLevel(log.DebugLevel)
-	case "INFO":
-		log.SetLevel(log.InfoLevel)
-	default:
+	case "ERROR":
 		log.SetLevel(log.ErrorLevel)
+	default:
+		log.SetLevel(log.InfoLevel)
 	}
 }
 
+func setRtOps() {
+	debug.SetGCPercent(20)
+}
+
 func main() {
+	setRtOps()
 	initLog()
 
 	cmd.Execute()

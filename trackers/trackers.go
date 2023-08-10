@@ -41,7 +41,8 @@ func runTrackers(pw *progress.Monitor) {
 			}
 			var newEp int
 			// if the episode number is greater than the number of episodes in the season
-			if pack.EpisodeNumber > (tracker.EpisodeRange[1] - tracker.EpisodeRange[0]) {
+			if (pack.EpisodeNumber > (tracker.EpisodeRange[1] - tracker.EpisodeRange[0])) &&
+				!tracker.NoRangeShift {
 				// subtract the lower bound of the episode range from the episode number
 				// (-1 because the episode range is 1-indexed)
 				newEp = pack.EpisodeNumber - (tracker.EpisodeRange[0] - 1)
@@ -58,7 +59,7 @@ func runTrackers(pw *progress.Monitor) {
 				BotNick:     botN,
 				FileName:    pack.Name,
 				ModFileName: fmt.Sprintf("S%dE%d", tracker.Season, newEp),
-				Size:        0,
+				Size:        pack.SizeBytes,
 				ShowName:    tracker.FileName,
 				Season:      tracker.Season,
 				Episode:     pack.EpisodeNumber,
@@ -81,7 +82,7 @@ func runTrackers(pw *progress.Monitor) {
 			irc.QueuePack(sPack, pw)
 		}
 	}
-	if failures >= len(trackers)/2 {
+	if failures > len(trackers)/2 {
 		log.Fatal("Too many tracker failures in getting packs. Exiting...")
 	}
 }

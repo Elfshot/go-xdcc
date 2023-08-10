@@ -1,10 +1,12 @@
 package util
 
 import (
-	"errors"
+	"fmt"
+	"hash/crc32"
 	"math/rand"
 	"net"
 	"os"
+	"runtime"
 
 	"github.com/Elfshot/go-xdcc/config"
 	log "github.com/sirupsen/logrus"
@@ -12,6 +14,7 @@ import (
 
 const randomChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+var bufferSize = config.GetConfig().BufferSizeMB * 1024 * 1024
 var boundIp net.IP
 
 func CheckDefaultI(x ...int) bool {
@@ -71,7 +74,7 @@ func VoidTcpConn(ip net.IP, port int) {
 		return
 	}
 	for i := 0; i < 25; i++ {
-		conn.Read(make([]byte, 1024))
+		conn.Read(make([]byte, 1024*512)) // 512KB
 	}
 	conn.Close()
 }
@@ -85,8 +88,8 @@ func RandStr(n uint) string {
 }
 
 func GetFileSize(f string) (int, error) {
-	fileStub, _ := os.OpenFile(f, os.O_APPEND|os.O_CREATE, 0777)
-	fileStub.Close()
+	file, _ := os.OpenFile(f, os.O_APPEND|os.O_CREATE, 0777)
+	defer file.Close()
 
 	// ?Fast/Usually accurate
 	/*
@@ -110,10 +113,51 @@ func GetFileSize(f string) (int, error) {
 		return len(data), nil
 	*/
 
-	data, err := os.ReadFile(f)
-	if err != nil {
-		log.Error(err)
-		return 0, errors.New("error reading file")
+	size := 0
+	var c error = nil
+	data := make([]byte, bufferSize)
+
+	for c == nil {
+		n := 0
+		n, c = file.Read(data)
+		size += n
 	}
-	return len(data), nil
+
+	return size, nil
+}
+
+func RunGC() {
+	log.Debug("Running GC")
+	runtime.GC()
+}
+
+func GetCrc32(fileName string) (string, error) {
+	file, err := os.Open(fileName)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	buffer := make([]byte, bufferSize)
+	hash := crc32.NewIEEE()
+
+	var gg error = nil
+
+	for gg == nil {
+		var n int
+		n, gg = file.Read(buffer)
+
+		// truncate the buffer to the actual data read if necessary
+		if n < bufferSize {
+			buffer = buffer[:n]
+		}
+
+		hash.Write(buffer)
+	}
+
+	// get the checksum
+	checksum := fmt.Sprintf("%8X", hash.Sum32())
+
+	RunGC()
+	return checksum, nil
 }

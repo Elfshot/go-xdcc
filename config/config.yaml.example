@@ -5,6 +5,8 @@ downloadDir: "./downloads" # (Leave as-is for docker instances) Directory to dow
 #boundIp: "000.000.000.000" # (Optional [auto-binds to first available IP]) IP to bind to for DCC TCP connections
 downloadInterval: 30 # Time in minutes between searching for new downloads
 crcCheck: always # Options: always, resume | Leave blank ("") or don't include line for never
+bufferSizeMB: 2 # 2MB byte buffers | lower = more cpu usage & time, higher = more ram usage
+skipOrganization: false # When true, will not organize files into folders and will leave them in the download directory with their original names | Negates "season", "noRangeShift", and "fileName" options in tracker configs
 
 irc:
   server: "irc.rizon.net"
