@@ -2,6 +2,7 @@ package trackers
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"time"
 
@@ -79,10 +80,10 @@ func runTrackers(pw *progress.Monitor) {
 				continue
 			}
 
-			irc.QueuePack(sPack, pw)
+			irc.QueuePack(sPack, pw, 0)
 		}
 	}
-	if failures > len(trackers)/2 {
+	if failures > int(math.Ceil(float64(len(trackers))/float64(2))) {
 		log.Fatal("Too many tracker failures in getting packs. Exiting...")
 	}
 }

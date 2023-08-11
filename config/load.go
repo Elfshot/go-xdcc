@@ -21,6 +21,7 @@ type Config struct {
 	CrcCheck         string   `yaml:"crcCheck"` // "resume", "always"
 	BufferSizeMB     int      `yaml:"bufferSizeMB"`
 	SkipOrganization bool     `yaml:"skipOrganization"`
+	MaxDlRetries     uint8    `yaml:"maxDlRetries"`
 
 	IRC      ircConfig `yaml:"irc"`
 	Trackers []Tracker

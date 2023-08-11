@@ -7,6 +7,7 @@ downloadInterval: 30 # Time in minutes between searching for new downloads
 crcCheck: always # Options: always, resume | Leave blank ("") or don't include line for never
 bufferSizeMB: 2 # 2MB byte buffers | lower = more cpu usage & time, higher = more ram usage
 skipOrganization: false # When true, will not organize files into folders and will leave them in the download directory with their original names | Negates "season", "noRangeShift", and "fileName" options in tracker configs
+maxDlRetries: 3 # Max number of times to retry a download before giving up
 
 irc:
   server: "irc.rizon.net"
