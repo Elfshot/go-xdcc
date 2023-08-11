@@ -353,7 +353,7 @@ func QueueLoop() {
 
 						// Keep track of retries + add retry flag/event
 						removeFinishedPack(pack)
-						QueuePack(pack, monitor)
+						ReQueuePack(pack, monitor, v.attempt+1)
 
 						return
 					} else if status == TRANFER_FILE_CLOSED && pack.Crc32 != "" {
@@ -378,10 +378,7 @@ func QueueLoop() {
 								return
 							}
 
-							go func() {
-								time.Sleep(180 * time.Second)
-								QueuePack(pack, monitor)
-							}()
+							ReQueuePack(pack, monitor, v.attempt+1)
 							return
 						}
 						log.Debugf("CRC32 Checksum match for %s, expected %s got %s", pack.FileName, pack.Crc32, crc32)

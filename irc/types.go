@@ -28,6 +28,7 @@ type events struct {
 type queue struct {
 	pack    *Pack
 	monitor *progress.Monitor
+	attempt uint8
 }
 
 type counterT struct {

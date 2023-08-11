@@ -5,6 +5,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/Elfshot/go-xdcc/config"
 	"github.com/Elfshot/go-xdcc/progress"
@@ -71,7 +72,15 @@ func removeFinishedPack(pack *Pack) {
 	}
 }
 
-func QueuePack(pack *Pack, monitor *progress.Monitor) {
+func QueuePack(pack *Pack, monitor *progress.Monitor, attempt uint8) {
+	if attempt > config.GetConfig().MaxDlRetries {
+		log.Errorf("Max retries reached for pack %s", pack.FileName)
+
+		// Add pack to list to ensure it doesn't retry
+		packs = append(packs, pack)
+		return
+	}
+
 	if findPack(pack.FileName) != nil {
 		log.Debugf("Pack %s already in queue", pack.FileName)
 		return
@@ -80,9 +89,15 @@ func QueuePack(pack *Pack, monitor *progress.Monitor) {
 	packQueue <- &queue{
 		pack:    pack,
 		monitor: monitor,
+		attempt: attempt,
 	}
 
 	packs = append(packs, pack)
+}
+
+func ReQueuePack(pack *Pack, monitor *progress.Monitor, attempt uint8) {
+	time.Sleep(180 * time.Second)
+	QueuePack(pack, monitor, attempt+1)
 }
 
 func getPack(bot string, packNum int, jobs chan *session) (quit chan bool) {
