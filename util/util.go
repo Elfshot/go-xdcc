@@ -156,7 +156,7 @@ func GetCrc32(fileName string) (string, error) {
 	}
 
 	// get the checksum
-	checksum := fmt.Sprintf("%8X", hash.Sum32())
+	checksum := fmt.Sprintf("%08X", hash.Sum32())
 
 	RunGC()
 	return checksum, nil
