@@ -77,6 +77,7 @@ func VoidTcpConn(ip net.IP, port int) {
 		conn.Read(make([]byte, 1024*512)) // 512KB
 	}
 	conn.Close()
+	RunGC()
 }
 
 func RandStr(n uint) string {

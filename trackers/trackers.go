@@ -10,6 +10,7 @@ import (
 	"github.com/Elfshot/go-xdcc/irc"
 	"github.com/Elfshot/go-xdcc/progress"
 	"github.com/Elfshot/go-xdcc/search"
+	"github.com/Elfshot/go-xdcc/util"
 	"github.com/go-co-op/gocron"
 
 	log "github.com/sirupsen/logrus"
@@ -86,4 +87,6 @@ func runTrackers(pw *progress.Monitor) {
 	if failures > int(math.Ceil(float64(len(trackers))/float64(2))) {
 		log.Fatal("Too many tracker failures in getting packs. Exiting...")
 	}
+
+	util.RunGC()
 }

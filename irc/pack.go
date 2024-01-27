@@ -27,6 +27,7 @@ type Pack struct {
 	Version int
 }
 
+// TODO: Get rid of this and replace with redis or something
 var packQueue = make(chan *queue, config.GetConfig().MaxDownloads)
 var packs = make([]*Pack, 0)
 
