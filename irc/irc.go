@@ -43,7 +43,7 @@ func getIrc(jobs chan *session, retries int) (quit chan bool, client *irc.Conn) 
 	select {
 	case <-finishConnect:
 		break
-	case <-time.After(time.Duration(30*math.Pow(2.17, float64(retries))) * time.Second): // Rough exponential backoff
+	case <-time.After(time.Duration(60*math.Pow(2.17, float64(retries))) * time.Second): // Rough exponential backoff
 		if retries >= 3 {
 			log.Fatalf("Connection error: %s\n", "maximum number of retries reached for IRC network connection")
 		}
@@ -85,8 +85,8 @@ func createIrcClient() (*irc.Conn, chan bool) {
 		cfg.NewNick = func(n string) string { return mainConf.IRC.NickName }
 	}
 
-	cfg.Me.Name = util.RandStr(8)
-	cfg.Me.Ident = "go-xdcc"
+	cfg.Me.Name = util.RandStr(12)
+	cfg.Me.Ident = util.RandStr(8)
 	c := irc.Client(cfg)
 
 	log.Infof("Using | Nick %s | Name %s | Ident %s", c.Me().Nick, c.Me().Name, c.Me().Ident)

@@ -13,6 +13,6 @@ irc:
   server: "irc.rizon.net"
   serverPort: 6697
   channelName: "#nibl"
-  closeConnectionMins: 5 # Time in minutes of an idle irc connection before closing it
-  maxWaitIrcCycles: 25 # Max number of irc cycles to wait for a download to start before erroring
-  maxTcpIdleTime: 60 # Maximum number of seconds for a TCP connection to idle before aborting a transfer
+  closeConnectionMins: 720 # Time in minutes of an idle irc connection before closing it
+  maxWaitIrcCycles: 5 # Max number of irc cycles to wait for a download to start before erroring
+  maxTcpIdleTime: 120 # Maximum number of seconds for a TCP connection to idle before aborting a transfer
