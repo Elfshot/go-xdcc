@@ -2,61 +2,60 @@ name: Build executable & Build image
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: ["main", "dev", "v2"]
 
 jobs:
-  
   build:
-    runs-on: ubuntu
-    
+    runs-on: Linux
+
     permissions:
       contents: read
       packages: write
-    
+
     steps:
-    - uses: actions/checkout@v3
+      - uses: actions/checkout@v3
 
-    - name: Set up Go
-      uses: actions/setup-go@v3
-      with:
-        go-version: "1.20.x"
+      - name: Set up Go
+        uses: actions/setup-go@v3
+        with:
+          go-version: "1.23.x"
 
-    - name: Install dependencies
-      run: go get .
+      - name: Install dependencies
+        run: go get .
 
-    - name: Set environment
-      run: env CGO_ENABLED=0 >/dev/null & env GOOS=linux >/dev/null & env GOARCH=amd64 >/dev/null
+      - name: Set environment
+        run: env CGO_ENABLED=0 >/dev/null & env GOOS=linux >/dev/null & env GOARCH=amd64 >/dev/null
 
-    - name: Build
-      run: go build -tags netgo -a -v
+      - name: Build
+        run: go build -tags netgo -a -v
 
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag goxdcc:$(date +%s)
+      - name: Build the Docker image
+        run: docker build . --file Dockerfile --tag goxdcc:$(date +%s)
 
-    - name: Log in to the Container registry
-      uses: docker/login-action@v2
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log in to the Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Extract metadata (tags, labels) for Docker
-      id: meta
-      uses: docker/metadata-action@v4
-      with:
-        images: ghcr.io/Elfshot/goxdcc
-        tags: |
-          type=raw,value=latest,enable={{is_default_branch}}
-          type=raw,value=nightly,enable=${{ github.ref == format('refs/heads/{0}', 'dev') }}
-      
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ghcr.io/Elfshot/goxdcc
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value=nightly,enable=${{ github.ref == format('refs/heads/{0}', 'dev') }}
+            type=raw,value=v2,enable=${{ github.ref == format('refs/heads/{0}', 'v2') }}
 
-    - name: Build and push Docker image
-      uses: docker/build-push-action@v4
-      with:
-        context: .
-        push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
-    
-    - name: "Prune docker images"
-      run: "docker image prune -f"
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: "Prune docker images"
+        run: "docker image prune -f"
