@@ -5,10 +5,10 @@ go 1.19
 require (
 	github.com/fluffle/goirc v1.3.0
 	github.com/go-co-op/gocron v1.31.1
-	github.com/jedib0t/go-pretty/v6 v6.4.6
+	github.com/jedib0t/go-pretty/v6 v6.6.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.7.0
-	golang.org/x/sys v0.11.0
+	golang.org/x/sys v0.17.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -20,7 +20,7 @@ require (
 	github.com/rivo/uniseg v0.4.4 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/testify v1.8.4 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
 	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/term v0.17.0 // indirect
 )
